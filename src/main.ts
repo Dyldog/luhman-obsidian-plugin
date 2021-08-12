@@ -1,5 +1,6 @@
+import './styles/styles.css';
 
-import { Plugin, TFile, App, Vault, Workspace } from 'obsidian';
+import { Plugin, TFile, App, Vault, Workspace, Modal } from 'obsidian';
 
 const regex = /^([0-9]+)(?:-([a-z]+)-([0-9]+)?)?\.md$/;
 const lettersIDComponentSuccessors: Record<string, string> = {
@@ -93,24 +94,24 @@ export default class NewZettel extends Plugin {
         return nextID
     }
 
-    makeNoteForNextSiblingOf(sibling: TFile): string {
+    makeNoteForNextSiblingOf(sibling: TFile, title: string): string {
         var nextID = this.firstAvailableID(this.incrementID(sibling.basename))
         let nextPath = this.app.fileManager.getNewFileParent(sibling.path).path + "/" + nextID + ".md"
-        this.makeNote(nextPath)
+        this.makeNote(nextPath, title)
 
         return nextID
     }
 
-    makeNoteForNextChildOf(parent: TFile): string {
+    makeNoteForNextChildOf(parent: TFile, title: string): string {
         var childID = this.firstAvailableID(this.firstChildOf(parent.basename))
         let nextPath = this.app.fileManager.getNewFileParent(parent.path).path + "/" + childID + ".md"
-        this.makeNote(nextPath)
+        this.makeNote(nextPath, title)
         return childID
     }
 
-    makeNote(path: string) {
+    makeNote(path: string, title: string) {
         let app = this.app
-        this.app.vault.create(path, "# ").then (function (file) {
+        this.app.vault.create(path, "# " + title + "\n\n").then (function (file) {
             app.workspace.activeLeaf?.openFile(file)
         })
     }
@@ -119,11 +120,11 @@ export default class NewZettel extends Plugin {
         return /^((?:[0-9]+|[a-z]+)+)\.md$/.exec(name) != null
     }
 
-    makeNoteFunction(idGenerator: ((file: TFile) => string)) {
+    makeNoteFunction(idGenerator: ((file: TFile, title: string) => string), title: string) {
         var file = this.app.workspace.getActiveFile()
         if (file == null) { return }
         if (this.isZettelFile(file.name)) {
-            let nextID = idGenerator.bind(this, file)()
+            let nextID = idGenerator.bind(this, file, title)()
             this.copyToClipboard("[[" + nextID + "]]")
         }
     }
@@ -136,7 +137,9 @@ export default class NewZettel extends Plugin {
 			id: 'new-sibling-note',
 			name: 'New Sibling Zettel Note',
 			callback: () => {
-                this.makeNoteFunction(this.makeNoteForNextSiblingOf)
+                new NewZettelModal(this.app, (title: string) => {
+                    this.makeNoteFunction(this.makeNoteForNextSiblingOf, title)
+                }).open()
 			}
 		});
 
@@ -144,7 +147,18 @@ export default class NewZettel extends Plugin {
 			id: 'new-child-note',
 			name: 'New Child Zettel Note',
 			callback: () => {
-				this.makeNoteFunction(this.makeNoteForNextChildOf)
+                new NewZettelModal(this.app, (title: string) => {
+                    this.makeNoteFunction(this.makeNoteForNextChildOf, title)
+                }).open()
+			}
+		});
+
+        this.addCommand({
+			id: 'zetel-test',
+			name: 'Zettel Test',
+			callback: () => {
+                // let completion = (te)
+				// new NewZettelModal(this.app).open();
 			}
 		});
     }
@@ -153,4 +167,49 @@ export default class NewZettel extends Plugin {
         console.log('unloading New Zettel');
         // this.initialize(true);
     }
+}
+
+class NewZettelModal extends Modal {
+    public completion: (text: string) => void
+	constructor(app: App, completion: ((title: string) => void)) {
+		super(app);
+        this.completion = completion
+	}
+
+	onOpen() {
+        let {contentEl} = this;
+        contentEl.parentElement!.addClass("zettel-modal");
+        this.titleEl.setText("New zettel title...");
+        
+        let container = contentEl.createEl("div")
+        container.addClass("zettel-modal-container");
+        
+        let textBox = contentEl.createEl("input", { "type":"text" });
+        textBox.addClass("zettel-modal-textbox")
+        textBox.id = "zettel-modal-textbox"
+        textBox.addEventListener("keydown", (event) => {
+            if (event.key == "Enter") {
+                this.goTapped()
+            }
+        });
+        container.append(textBox)
+        
+        let button = contentEl.createEl("input", { "type": "button", "value": "GO" })
+        button.addClass("zettel-modal-button")
+        button.addEventListener("click", (e:Event) => this.goTapped());
+        container.append(button)
+        
+        contentEl.append(container)
+
+        window.setTimeout(function () {
+            textBox.focus();
+        }, 0);
+    }
+
+    goTapped() {
+        let title = (<HTMLInputElement>this.contentEl.ownerDocument.getElementById("zettel-modal-textbox")).value
+        this.completion(title)
+        this.close()
+    }
+    
 }
