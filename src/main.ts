@@ -189,6 +189,19 @@ export default class NewZettel extends Plugin {
 		});
 
         this.addCommand({
+			id: 'open-zettel',
+			name: 'Open Zettel',
+			callback: () => {
+                // let completion = (te)
+                this.getAllNoteTitles().then((titles) => {
+                    new ZettelSuggester(this.app, titles, this.currentlySelectedText(), (file) => {
+                        this.app.workspace.getUnpinnedLeaf().openFile(file)
+                    }).open();
+                })
+			}
+		});
+
+        this.addCommand({
 			id: 'zetel-test',
 			name: 'Zettel Test',
 			callback: () => {
