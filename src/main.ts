@@ -72,6 +72,12 @@ export default class NewZettel extends Plugin {
         return parts.concat([this.incrementIDComponent(lastPart)]).join("")
     }
 
+    parentID(id: string): string {
+        var parts = id.match(/([0-9]+|[a-z]+)/g)!
+        parts.pop()
+        return parts.join("")
+
+    }
     nextComponentOf(id: string): string {
         var parts = id.match(/([0-9]+|[a-z]+)/g)!
         var lastPart = parts.pop()!
@@ -202,17 +208,31 @@ export default class NewZettel extends Plugin {
 		});
 
         this.addCommand({
-			id: 'zetel-test',
-			name: 'Zettel Test',
+			id: 'open-parent-zettel',
+			name: 'Open Parent Zettel',
 			callback: () => {
-
-            }
-        });
+                let file = this.currentFile()
+                if (file) {
+                    this.openZettel(this.parentID(file.basename))
+                }
+			}
+		});
     }
 
     onunload() {
         console.log('unloading New Zettel');
         // this.initialize(true);
+    }
+
+    currentFile(): TFile | undefined {
+        return this.app.workspace.getActiveViewOfType(MarkdownView)?.file
+    }
+
+    openZettel(id: string) {
+        let file = this.app.vault.getMarkdownFiles().filter((file) => file.basename == id).first()
+        if (file) {
+            this.app.workspace.getUnpinnedLeaf().openFile(file)
+        }
     }
 
     currentlySelectedText(): string | undefined {
