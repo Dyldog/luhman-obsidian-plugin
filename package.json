@@ -1,7 +1,7 @@
 {
-    "name": "new-zettel",
+    "name": "luhman",
     "version": "1.0.0",
-    "description": "Shows the first markdown header of a note in the file explorer",
+    "description": "Commands for handling a zettelkasten with Luhman-style IDs as filenames",
     "main": "main.js",
     "scripts": {
         "prettier": "prettier --write 'src/**/*.+(ts|tsx|json|html|css)'",
