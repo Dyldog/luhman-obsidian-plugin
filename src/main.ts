@@ -1,6 +1,6 @@
 import './styles/styles.css';
 
-import { Plugin, TFile, App, Vault, Workspace, Modal } from 'obsidian';
+import { Plugin, TFile, App, Vault, Workspace, Modal, MarkdownView, EditorPosition } from 'obsidian';
 
 const regex = /^([0-9]+)(?:-([a-z]+)-([0-9]+)?)?\.md$/;
 const lettersIDComponentSuccessors: Record<string, string> = {
@@ -112,7 +112,9 @@ export default class NewZettel extends Plugin {
     makeNote(path: string, title: string) {
         let app = this.app
         this.app.vault.create(path, "# " + title + "\n\n").then (function (file) {
-            app.workspace.activeLeaf?.openFile(file)
+            app.workspace.activeLeaf?.openFile(file).then (function (file) {
+                app.workspace.getActiveViewOfType(MarkdownView)?.editor.exec('goEnd')
+            })
         })
     }
 
@@ -189,6 +191,7 @@ class NewZettelModal extends Modal {
         textBox.id = "zettel-modal-textbox"
         textBox.addEventListener("keydown", (event) => {
             if (event.key == "Enter") {
+                event.preventDefault()
                 this.goTapped()
             }
         });
