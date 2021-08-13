@@ -94,26 +94,31 @@ export default class NewZettel extends Plugin {
         return nextID
     }
 
-    makeNoteForNextSiblingOf(sibling: TFile, title: string): string {
+    makeNoteForNextSiblingOf(sibling: TFile): string {
         var nextID = this.firstAvailableID(this.incrementID(sibling.basename))
         let nextPath = this.app.fileManager.getNewFileParent(sibling.path).path + "/" + nextID + ".md"
-        this.makeNote(nextPath, title)
-
         return nextID
     }
 
-    makeNoteForNextChildOf(parent: TFile, title: string): string {
+    makeNoteForNextChildOf(parent: TFile): string {
         var childID = this.firstAvailableID(this.firstChildOf(parent.basename))
         let nextPath = this.app.fileManager.getNewFileParent(parent.path).path + "/" + childID + ".md"
-        this.makeNote(nextPath, title)
         return childID
     }
 
-    makeNote(path: string, title: string) {
+    makeNote(path: string, title: string, content: string, placeCursorAtStartOfContent: boolean) {
         let app = this.app
-        this.app.vault.create(path, "# " + title + "\n\n").then (function (file) {
+        let titleContent = "# " + title + "\n\n"
+        let fullContent = titleContent + content
+        this.app.vault.create(path,  fullContent).then (function (file) {
             app.workspace.activeLeaf?.openFile(file).then (function (file) {
-                app.workspace.getActiveViewOfType(MarkdownView)?.editor.exec('goEnd')
+                let editor = app.workspace.getActiveViewOfType(MarkdownView)?.editor
+                if (placeCursorAtStartOfContent) {
+                    let position: EditorPosition = { line: 2, ch: 0}
+                    editor?.setCursor(position)
+                } else {
+                    editor?.exec('goEnd')
+                }
             })
         })
     }
@@ -122,12 +127,30 @@ export default class NewZettel extends Plugin {
         return /^((?:[0-9]+|[a-z]+)+)\.md$/.exec(name) != null
     }
 
-    makeNoteFunction(idGenerator: ((file: TFile, title: string) => string), title: string) {
+    makeNoteFunction(idGenerator: ((file: TFile) => string)) {
         var file = this.app.workspace.getActiveFile()
         if (file == null) { return }
         if (this.isZettelFile(file.name)) {
-            let nextID = idGenerator.bind(this, file, title)()
-            this.copyToClipboard("[[" + nextID + "]]")
+            let editor = this.app.workspace.getActiveViewOfType(MarkdownView)?.editor
+            let selection = editor?.getSelection()
+            
+            let nextID = idGenerator.bind(this, file)()
+            let nextPath = this.app.fileManager.getNewFileParent(file.path).path + "/" + nextID + ".md"
+            let newLink = "[[" + nextID + "]]"
+            this.copyToClipboard(newLink)
+
+            if (selection) {
+                let title =  selection.split(/\s+/).map(w => w[0].toUpperCase() + w.slice(1)).join(' ');
+                let selectionPos = editor!.listSelections()[0]
+                let positionCH = Math.max(selectionPos.head.ch, selectionPos.anchor.ch)
+                let position: EditorPosition = { line: selectionPos.anchor.line, ch: positionCH + 1 }
+                editor!.replaceRange(" " + newLink, position, position)
+                this.makeNote(nextPath, title, newLink, true)
+            } else {
+                new NewZettelModal(this.app, (title: string) => {
+                    this.makeNote(nextPath, title, newLink, true)
+                }).open()
+            }
         }
     }
 
@@ -139,9 +162,7 @@ export default class NewZettel extends Plugin {
 			id: 'new-sibling-note',
 			name: 'New Sibling Zettel Note',
 			callback: () => {
-                new NewZettelModal(this.app, (title: string) => {
-                    this.makeNoteFunction(this.makeNoteForNextSiblingOf, title)
-                }).open()
+                this.makeNoteFunction(this.makeNoteForNextSiblingOf)
 			}
 		});
 
@@ -149,9 +170,7 @@ export default class NewZettel extends Plugin {
 			id: 'new-child-note',
 			name: 'New Child Zettel Note',
 			callback: () => {
-                new NewZettelModal(this.app, (title: string) => {
-                    this.makeNoteFunction(this.makeNoteForNextChildOf, title)
-                }).open()
+                this.makeNoteFunction(this.makeNoteForNextChildOf)
 			}
 		});
 
