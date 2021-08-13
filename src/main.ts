@@ -1,6 +1,7 @@
 import './styles/styles.css';
 
-import { Plugin, TFile, App, Vault, Workspace, Modal, MarkdownView, EditorPosition } from 'obsidian';
+import { Plugin, TFile, App, Vault, Workspace, Modal, MarkdownView, EditorPosition, SuggestModal } from 'obsidian';
+import { resolve } from 'path';
 
 const regex = /^([0-9]+)(?:-([a-z]+)-([0-9]+)?)?\.md$/;
 const lettersIDComponentSuccessors: Record<string, string> = {
@@ -175,18 +176,78 @@ export default class NewZettel extends Plugin {
 		});
 
         this.addCommand({
+			id: 'insert-zettel-link',
+			name: 'Insert Zettel Link',
+			callback: () => {
+                // let completion = (te)
+                this.getAllNoteTitles().then((titles) => {
+                    new ZettelSuggester(this.app, titles, this.currentlySelectedText(), (file) => {
+                        this.insertTextIntoCurrentNote("[[" + file.basename + "]]")
+                    }).open();
+                })
+			}
+		});
+
+        this.addCommand({
 			id: 'zetel-test',
 			name: 'Zettel Test',
 			callback: () => {
-                // let completion = (te)
-				// new NewZettelModal(this.app).open();
-			}
-		});
+
+            }
+        });
     }
 
     onunload() {
         console.log('unloading New Zettel');
         // this.initialize(true);
+    }
+
+    currentlySelectedText(): string | undefined {
+        return this.app.workspace.getActiveViewOfType(MarkdownView)?.editor.getSelection()
+    }
+
+    insertTextIntoCurrentNote(text: string) {
+        let view = this.app.workspace.getActiveViewOfType(MarkdownView)
+
+        if (view) {
+            let editor = view!.editor
+        
+            let position: EditorPosition
+            var prefix: string = ""
+
+            if (editor.getSelection()) {
+                let selectionPos = editor.listSelections()[0]
+                let positionCH = Math.max(selectionPos.head.ch, selectionPos.anchor.ch)
+                position = { line: selectionPos.anchor.line, ch: positionCH + 1 }
+                prefix = " "
+            } else {
+                position = editor.getCursor()
+                
+            }
+
+            editor.replaceRange(" " + text, position, position)
+        }
+    }
+
+    async getAllNoteTitles(): Promise<Map<string, TFile>> {
+        const regex = /# (.+)\s*/;
+
+        let titles: Map<string, TFile> = new Map()
+        let files = this.app.vault.getMarkdownFiles().filter((file) => {
+            const ignore = /^[_layouts|templates|scripts]/
+            return file.path.match(ignore) == null
+        })
+
+        for (const file of files) {
+            await this.app.vault.cachedRead(file).then((text) => {
+                let match = text.match(regex)
+                if (match) {
+                    titles.set(match[1], file)
+                }
+            })
+        }
+
+        return titles
     }
 }
 
@@ -233,5 +294,38 @@ class NewZettelModal extends Modal {
         this.completion(title)
         this.close()
     }
-    
+}
+
+class ZettelSuggester extends SuggestModal<string> {
+    private titles: Map<string, TFile>
+    private completion: (file: TFile) => void
+    private initialQuery: string
+	constructor(app: App, titles: Map<string, TFile>, search: string | undefined, completion: (file: TFile) => void) {
+		super(app);
+        this.initialQuery = search ?? ""
+        this.titles = titles
+        this.completion = completion
+	}
+
+    onOpen() {
+        super.onOpen()
+        this.inputEl.value = this.initialQuery
+        var event = new Event('input');
+        this.inputEl.dispatchEvent(event);
+    }
+
+    getSuggestions(query: string): string[] {
+        let sanitisedQuery = query.toLowerCase().replace(" ", "")
+        return Array.from(this.titles.keys()).filter((title) => { 
+            let sanitisedTitle = title.toLowerCase().replace(" ", "")
+            return sanitisedTitle.contains(sanitisedQuery)
+        })
+    }
+    renderSuggestion(value: string, el: HTMLElement) {
+        el.setText(value)
+    }
+    onChooseSuggestion(item: string, evt: KeyboardEvent | MouseEvent) {
+        this.completion(this.titles.get(item)!)
+    }
+
 }
