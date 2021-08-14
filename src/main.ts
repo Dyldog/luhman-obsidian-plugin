@@ -142,13 +142,14 @@ export default class NewZettel extends Plugin {
         var file = this.app.workspace.getActiveFile()
         if (file == null) { return }
         if (this.isZettelFile(file.name)) {
+            let fileID = file.basename
+            let fileLink = "[[" + fileID + "]]"
             let editor = this.app.workspace.getActiveViewOfType(MarkdownView)?.editor
             let selection = editor?.getSelection()
             
             let nextID = idGenerator.bind(this, file)()
             let nextPath = this.app.fileManager.getNewFileParent(file.path).path + "/" + nextID + ".md"
             let newLink = "[[" + nextID + "]]"
-            this.copyToClipboard(newLink)
 
             if (selection) {
                 let title =  selection.split(/\s+/).map(w => w[0].toUpperCase() + w.slice(1)).join(' ');
@@ -156,10 +157,11 @@ export default class NewZettel extends Plugin {
                 let positionCH = Math.max(selectionPos.head.ch, selectionPos.anchor.ch)
                 let position: EditorPosition = { line: selectionPos.anchor.line, ch: positionCH + 1 }
                 editor!.replaceRange(" " + newLink, position, position)
-                this.makeNote(nextPath, title, newLink, true)
+                this.makeNote(nextPath, title, fileLink, true)
             } else {
                 new NewZettelModal(this.app, (title: string) => {
-                    this.makeNote(nextPath, title, newLink, true)
+                    this.insertTextIntoCurrentNote(newLink)
+                    this.makeNote(nextPath, title, fileLink, true)
                 }).open()
             }
         }
