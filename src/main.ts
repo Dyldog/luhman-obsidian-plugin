@@ -74,8 +74,12 @@ export default class NewZettel extends Plugin {
 
     parentID(id: string): string {
         var parts = id.match(/([0-9]+|[a-z]+)/g)!
-        parts.pop()
-        return parts.join("")
+        if (parts) {
+            parts.pop()
+            return parts.join("")
+        } else {
+            return ""
+        }
 
     }
     nextComponentOf(id: string): string {
@@ -161,6 +165,57 @@ export default class NewZettel extends Plugin {
         }
     }
 
+    async renameZettel(id: string, toName: string) {
+        let zettel = this.app.vault.getMarkdownFiles().filter((file) => file.basename == id).first()
+        if (zettel) {
+            await this.updateLinks(id, toName)
+            await this.app.vault.rename(zettel, zettel.parent.path + toName + "." + zettel.extension)
+        }
+    }
+
+    async updateLinks(fromID: string, toID: string) {
+        let fromLink = "[[" + fromID + "]]"
+        let toLink = "[[" + toID + "]]"
+        let matchingFiles: [TFile, string][] = []
+        for (const file of this.getZettels()) {
+            let contents = await this.app.vault.read(file)
+            if (contents.contains(fromLink)) {
+                matchingFiles = matchingFiles.concat([[file, contents]])
+            }
+        }
+
+        for (const [file, contents] of matchingFiles) {
+            let newContents = contents.replace(fromLink, toLink)
+            await this.app.vault.modify(file, newContents)
+        }
+    }
+
+    async moveChildrenDown(id: string) {
+        let children = this.getDirectChildZettels(id)
+        for (const child of children) {
+            await this.moveZettelDown(child.basename)
+        }
+    }
+
+    async moveZettelDown(id: string) {
+        this.moveChildrenDown(id)
+        await this.renameZettel(id, this.firstAvailableID(id))
+    }
+
+    async outdentZettel(id: string) {
+        let newID = this.incrementID(this.parentID(id))
+        if (this.idExists(newID)) {
+            await this.moveZettelDown(id)
+        }
+
+        for (const child of this.getDirectChildZettels(id)) {
+            let newChildID: string = this.firstAvailableID(this.firstChildOf(newID))
+            await this.renameZettel(child.basename, newChildID)
+        }
+
+        await this.renameZettel(id, newID)
+    }
+
     async onload() {
         console.log('loading New Zettel');
         // this.app.workspace.onLayoutReady(this.initialize);
@@ -217,6 +272,17 @@ export default class NewZettel extends Plugin {
                 }
 			}
 		});
+
+        this.addCommand({
+			id: 'outdent-zettel',
+			name: 'Outdent Zettel',
+			callback: () => {
+                let file = this.currentFile()
+                if (file) {
+                    this.outdentZettel(file.basename)
+                }
+			}
+		});
     }
 
     onunload() {
@@ -262,16 +328,22 @@ export default class NewZettel extends Plugin {
         }
     }
 
+    getZettels(): TFile[] {
+        return this.app.vault.getMarkdownFiles().filter((file) => {
+            const ignore = /^[_layouts|templates|scripts]/
+            return file.path.match(ignore) == null
+        })
+    }
+
+    getDirectChildZettels(ofParent: string): TFile[] {
+        return this.getZettels().filter((file) => { return this.parentID(file.basename) == ofParent })
+    }
+
     async getAllNoteTitles(): Promise<Map<string, TFile>> {
         const regex = /# (.+)\s*/;
 
         let titles: Map<string, TFile> = new Map()
-        let files = this.app.vault.getMarkdownFiles().filter((file) => {
-            const ignore = /^[_layouts|templates|scripts]/
-            return file.path.match(ignore) == null
-        })
-
-        for (const file of files) {
+        for (const file of this.getZettels()) {
             await this.app.vault.cachedRead(file).then((text) => {
                 let match = text.match(regex)
                 if (match) {
