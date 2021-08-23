@@ -1,9 +1,9 @@
 {
     "id": "luhman",
-    "name": "Luhman",
     "version": "1.0.0",
+    "name": "Luhmann",
     "minAppVersion": "0.11.13",
-    "description": "Commands for handling a zettelkasten with Luhman-style IDs as filenames",
+    "description": "Commands for handling a zettelkasten with Luhmann-style IDs as filenames",
     "author": "Dylan Elliott",
     "authorUrl": "https://github.com/dyldog",
     "isDesktopOnly": false

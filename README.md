@@ -1,6 +1,6 @@
-# Luhman
+# Luhmann
 
-Commands for handling a zettelkasten with Luhman-style IDs (e.g: 12a56g) as filenames
+Commands for handling a zettelkasten with Luhmann-style IDs (e.g: 12a56g) as filenames
 
 ## Commands
 
