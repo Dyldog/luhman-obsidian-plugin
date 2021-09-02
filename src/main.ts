@@ -1,6 +1,6 @@
 import './styles/styles.css';
 
-import { Plugin, TFile, App, Vault, Workspace, Modal, MarkdownView, EditorPosition, SuggestModal } from 'obsidian';
+import { Plugin, TFile, App, Vault, Workspace, Modal, MarkdownView, EditorPosition, SuggestModal, FuzzySuggestModal, FuzzyMatch } from 'obsidian';
 import { resolve } from 'path';
 
 const regex = /^([0-9]+)(?:-([a-z]+)-([0-9]+)?)?\.md$/;
@@ -378,15 +378,18 @@ class NewZettelModal extends Modal {
     }
 }
 
-class ZettelSuggester extends SuggestModal<string> {
+class ZettelSuggester extends FuzzySuggestModal<string> {
     private titles: Map<string, TFile>
     private completion: (file: TFile) => void
     private initialQuery: string
+
 	constructor(app: App, titles: Map<string, TFile>, search: string | undefined, completion: (file: TFile) => void) {
 		super(app);
         this.initialQuery = search ?? ""
         this.titles = titles
         this.completion = completion
+        this.emptyStateText = "No zettels found"
+        this.setPlaceholder("Search for a zettel...")
 	}
 
     onOpen() {
@@ -396,17 +399,32 @@ class ZettelSuggester extends SuggestModal<string> {
         this.inputEl.dispatchEvent(event);
     }
 
-    getSuggestions(query: string): string[] {
-        let sanitisedQuery = query.toLowerCase().replace(" ", "")
-        return Array.from(this.titles.keys()).filter((title) => { 
-            let sanitisedTitle = title.toLowerCase().replace(" ", "")
-            return sanitisedTitle.contains(sanitisedQuery)
-        }).sort();
+    getItems(): string[] {
+        return Array.from(this.titles.keys()).sort();
     }
-    renderSuggestion(value: string, el: HTMLElement) {
-        el.setText(value)
+
+    getItemText(item: string): string {
+    return item;
+  }
+
+    renderSuggestion(value: FuzzyMatch<string>, el: HTMLElement) {
+        // const range = document.createRange();
+
+        let start = value.match.matches[0][0]
+        let end = value.match.matches[0][1]
+        el.setText(value.item)
+
+        let range = new Range();
+
+        let text = el.firstChild
+        if (text == null) { return }
+
+        range.setStart(text, start);
+        range.setEnd(text, end);
+        range.surroundContents(document.createElement('b'))
     }
-    onChooseSuggestion(item: string, evt: KeyboardEvent | MouseEvent) {
+
+    onChooseItem(item: string, evt: MouseEvent | KeyboardEvent) {
         this.completion(this.titles.get(item)!)
     }
 
