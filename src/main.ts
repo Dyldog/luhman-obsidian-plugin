@@ -138,8 +138,11 @@ export default class NewZettel extends Plugin {
         if (this.isZettelFile(file.name)) {
             let fileID = file.basename
             let fileLink = "[[" + fileID + "]]"
+            
             let editor = this.app.workspace.getActiveViewOfType(MarkdownView)?.editor
-            let selection = editor?.getSelection()
+            if (editor == null) { return }
+
+            let selection = editor.getSelection()
             
             let nextID = idGenerator.bind(this, file)()
             let nextPath = this.app.fileManager.getNewFileParent(file.path).path + "/" + nextID + ".md"
@@ -164,25 +167,7 @@ export default class NewZettel extends Plugin {
     async renameZettel(id: string, toName: string) {
         let zettel = this.app.vault.getMarkdownFiles().filter((file) => file.basename == id).first()
         if (zettel) {
-            await this.updateLinks(id, toName)
-            await this.app.vault.rename(zettel, zettel.parent.path + toName + "." + zettel.extension)
-        }
-    }
-
-    async updateLinks(fromID: string, toID: string) {
-        let fromLink = "[[" + fromID + "]]"
-        let toLink = "[[" + toID + "]]"
-        let matchingFiles: [TFile, string][] = []
-        for (const file of this.getZettels()) {
-            let contents = await this.app.vault.read(file)
-            if (contents.contains(fromLink)) {
-                matchingFiles = matchingFiles.concat([[file, contents]])
-            }
-        }
-
-        for (const [file, contents] of matchingFiles) {
-            let newContents = contents.replace(fromLink, toLink)
-            await this.app.vault.modify(file, newContents)
+            this.app.fileManager.renameFile(zettel, zettel.parent.path + toName + "." + zettel.extension)
         }
     }
 
