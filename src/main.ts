@@ -469,6 +469,7 @@ class ZettelSuggester extends FuzzySuggestModal<string> {
     this.completion = completion;
     this.emptyStateText = "No zettels found";
     this.setPlaceholder("Search for a zettel...");
+    console.log(this.initialQuery)
   }
 
   onOpen() {
@@ -487,9 +488,13 @@ class ZettelSuggester extends FuzzySuggestModal<string> {
   }
 
   renderSuggestion(value: FuzzyMatch<string>, el: HTMLElement) {
-    let start = value.match.matches[0][0];
-    let end = value.match.matches[0][1];
     el.setText(value.item);
+
+    let matches = value.match.matches
+    if (matches == null || matches.length == 0) { return }
+    let start = matches[0][0];
+    let end = matches[0][1];
+    
 
     let range = new Range();
 
