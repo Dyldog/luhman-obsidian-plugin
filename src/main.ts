@@ -34,16 +34,6 @@ const lettersIDComponentSuccessors: Record<string, string> = {
 };
 
 export default class NewZettel extends Plugin {
-
-    copyToClipboard(data: string): void {
-        const listener = (e: ClipboardEvent) => {
-            e.clipboardData?.setData('text/plain', data);
-            e.preventDefault();
-            document.removeEventListener('copy', listener);
-        };
-        document.addEventListener('copy', listener);
-        document.execCommand('copy');
-    }
     
     incrementStringIDComponent(id: string): string {
         let comps = id.split("")
