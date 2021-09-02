@@ -112,7 +112,7 @@ export default class NewZettel extends Plugin {
         let titleContent = "# " + title + "\n\n"
         let fullContent = titleContent + content
         this.app.vault.create(path,  fullContent).then (function (file) {
-            app.workspace.activeLeaf?.openFile(file).then (function (file) {
+            app.workspace.getLeaf()?.openFile(file).then (function (file) {
                 let editor = app.workspace.getActiveViewOfType(MarkdownView)?.editor
                 if (placeCursorAtStartOfContent) {
                     let position: EditorPosition = { line: 2, ch: 0}
