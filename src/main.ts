@@ -236,7 +236,7 @@ export default class NewZettel extends Plugin {
                 let titles =  await this.getAllNoteTitles()
 
                 new ZettelSuggester(this.app, titles, this.currentlySelectedText(), (file) => {
-                    this.app.workspace.getUnpinnedLeaf().openFile(file)
+                    this.app.workspace.getLeaf().openFile(file)
                 }).open();
 			}
 		});
@@ -276,7 +276,7 @@ export default class NewZettel extends Plugin {
     openZettel(id: string) {
         let file = this.app.vault.getMarkdownFiles().filter((file) => file.basename == id).first()
         if (file) {
-            this.app.workspace.getUnpinnedLeaf().openFile(file)
+            this.app.workspace.getLeaf().openFile(file)
         }
     }
 
@@ -347,11 +347,9 @@ class NewZettelModal extends Modal {
         contentEl.parentElement!.addClass("zettel-modal");
         this.titleEl.setText("New zettel title...");
         
-        let container = contentEl.createEl("div")
-        container.addClass("zettel-modal-container");
+        let container = contentEl.createEl("div", { "cls": "zettel-modal-container" })
         
-        let textBox = contentEl.createEl("input", { "type":"text" });
-        textBox.addClass("zettel-modal-textbox")
+        let textBox = contentEl.createEl("input", { "type": "text", "cls": "zettel-modal-textbox" });
         textBox.id = "zettel-modal-textbox"
         textBox.addEventListener("keydown", (event) => {
             if (event.key == "Enter") {
@@ -361,8 +359,7 @@ class NewZettelModal extends Modal {
         });
         container.append(textBox)
         
-        let button = contentEl.createEl("input", { "type": "button", "value": "GO" })
-        button.addClass("zettel-modal-button")
+        let button = contentEl.createEl("input", { "type": "button", "value": "GO", "zettel-modal-button" })
         button.addEventListener("click", (e:Event) => this.goTapped());
         container.append(button)
         
