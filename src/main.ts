@@ -401,7 +401,7 @@ class ZettelSuggester extends SuggestModal<string> {
         return Array.from(this.titles.keys()).filter((title) => { 
             let sanitisedTitle = title.toLowerCase().replace(" ", "")
             return sanitisedTitle.contains(sanitisedQuery)
-        })
+        }).sort();
     }
     renderSuggestion(value: string, el: HTMLElement) {
         el.setText(value)
