@@ -336,42 +336,43 @@ export default class NewZettel extends Plugin {
 }
 
 class NewZettelModal extends Modal {
-    public completion: (text: string) => void
+    public completion: (text: string) => void;
+    private textBox: HTMLInputElement;
+
 	constructor(app: App, completion: ((title: string) => void)) {
 		super(app);
         this.completion = completion
-	}
 
-	onOpen() {
         let {contentEl} = this;
         contentEl.parentElement!.addClass("zettel-modal");
         this.titleEl.setText("New zettel title...");
         
         let container = contentEl.createEl("div", { "cls": "zettel-modal-container" })
-        
-        let textBox = contentEl.createEl("input", { "type": "text", "cls": "zettel-modal-textbox" });
-        textBox.id = "zettel-modal-textbox"
-        textBox.addEventListener("keydown", (event) => {
+        this.textBox = contentEl.createEl("input", { "type": "text", "cls": "zettel-modal-textbox" });
+        this.textBox.id = "zettel-modal-textbox"
+        this.textBox.addEventListener("keydown", (event) => {
             if (event.key == "Enter") {
                 event.preventDefault()
                 this.goTapped()
             }
         });
-        container.append(textBox)
+        container.append(this.textBox)
         
-        let button = contentEl.createEl("input", { "type": "button", "value": "GO", "zettel-modal-button" })
+        let button = contentEl.createEl("input", { "type": "button", "value": "GO", "cls": "zettel-modal-button" })
         button.addEventListener("click", (e:Event) => this.goTapped());
         container.append(button)
         
         contentEl.append(container)
+	}
 
-        window.setTimeout(function () {
-            textBox.focus();
+	onOpen() {
+        window.setTimeout(() => {
+            this.textBox.focus();
         }, 0);
     }
 
     goTapped() {
-        let title = (<HTMLInputElement>this.contentEl.ownerDocument.getElementById("zettel-modal-textbox")).value
+        let title = this.textBox.value
         this.completion(title)
         this.close()
     }
