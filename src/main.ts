@@ -107,21 +107,25 @@ export default class NewZettel extends Plugin {
         return childID
     }
 
-    makeNote(path: string, title: string, content: string, placeCursorAtStartOfContent: boolean) {
+    async makeNote(path: string, title: string, content: string, placeCursorAtStartOfContent: boolean) {
         let app = this.app
         let titleContent = "# " + title + "\n\n"
         let fullContent = titleContent + content
-        this.app.vault.create(path,  fullContent).then (function (file) {
-            app.workspace.getLeaf()?.openFile(file).then (function (file) {
-                let editor = app.workspace.getActiveViewOfType(MarkdownView)?.editor
-                if (placeCursorAtStartOfContent) {
-                    let position: EditorPosition = { line: 2, ch: 0}
-                    editor?.setCursor(position)
-                } else {
-                    editor?.exec('goEnd')
-                }
-            })
-        })
+        let file = await this.app.vault.create(path,  fullContent)
+        let active = app.workspace.getLeaf()
+        if (active == null) { return }
+        
+        await active.openFile(file)
+
+        let editor = app.workspace.getActiveViewOfType(MarkdownView)?.editor
+        if (editor == null) { return }
+
+        if (placeCursorAtStartOfContent) {
+            let position: EditorPosition = { line: 2, ch: 0 }
+            editor.setCursor(position)
+        } else {
+            editor.exec('goEnd')
+        }
     }
 
     isZettelFile(name: string): boolean {
@@ -231,26 +235,24 @@ export default class NewZettel extends Plugin {
         this.addCommand({
 			id: 'insert-zettel-link',
 			name: 'Insert Zettel Link',
-			callback: () => {
+			callback: async () => {
                 // let completion = (te)
-                this.getAllNoteTitles().then((titles) => {
-                    new ZettelSuggester(this.app, titles, this.currentlySelectedText(), (file) => {
-                        this.insertTextIntoCurrentNote("[[" + file.basename + "]]")
-                    }).open();
-                })
+                let titles = await this.getAllNoteTitles()
+                new ZettelSuggester(this.app, titles, this.currentlySelectedText(), (file) => {
+                    this.insertTextIntoCurrentNote("[[" + file.basename + "]]")
+                }).open();
 			}
 		});
 
         this.addCommand({
 			id: 'open-zettel',
 			name: 'Open Zettel',
-			callback: () => {
-                // let completion = (te)
-                this.getAllNoteTitles().then((titles) => {
-                    new ZettelSuggester(this.app, titles, this.currentlySelectedText(), (file) => {
-                        this.app.workspace.getUnpinnedLeaf().openFile(file)
-                    }).open();
-                })
+			callback: async () => {
+                let titles =  await this.getAllNoteTitles()
+
+                new ZettelSuggester(this.app, titles, this.currentlySelectedText(), (file) => {
+                    this.app.workspace.getUnpinnedLeaf().openFile(file)
+                }).open();
 			}
 		});
 
@@ -336,12 +338,12 @@ export default class NewZettel extends Plugin {
 
         let titles: Map<string, TFile> = new Map()
         for (const file of this.getZettels()) {
-            await this.app.vault.cachedRead(file).then((text) => {
-                let match = text.match(regex)
-                if (match) {
-                    titles.set(match[1], file)
-                }
-            })
+            let text = await this.app.vault.cachedRead(file)
+            
+            let match = text.match(regex)
+            if (match) {
+                titles.set(match[1], file)
+            }
         }
 
         return titles
