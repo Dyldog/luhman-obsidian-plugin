@@ -4,7 +4,7 @@ Commands for handling a zettelkasten with Luhmann-style IDs (e.g: 12a56g) as fil
 
 ## Commands
 
-### Create sibling note
+### Create child notes
 
 Creates a note **under** the current note, e.g: If run from "23f3.md", "12f3a.md" (or the next available sibling) will be created. 
 
