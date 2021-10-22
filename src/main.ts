@@ -9,10 +9,12 @@ import {
   PluginSettingTab,
   Setting,
   TFile,
+  Notice,
 } from "obsidian";
 import "./styles/styles.css";
 
 const idOnlyRegex = /([0-9]+|[a-z]+)/g;
+const checkSettingsMessage = 'Try checking the settings if this seems wrong.'
 
 const lettersIDComponentSuccessors: Record<string, string> = {
   a: "b",
@@ -308,15 +310,15 @@ export default class NewZettel extends Plugin {
         }).open();
       }
     } else {
-
+      new Notice(`Couldn't find ID in "${file.basename}". ${checkSettingsMessage}`)
     }
   }
 
   async renameZettel(id: string, toId: string) {
     const sep = this.settings.separator;
-    let zettel = this.app.vault
+    const zettel = this.app.vault
       .getMarkdownFiles()
-      .filter((file) => this.fileToId(file.basename) == id)
+      .filter(file => this.fileToId(file.basename) === id)
       .first();
     if (zettel) {
       const id = this.fileToId(zettel.basename);
@@ -325,6 +327,8 @@ export default class NewZettel extends Plugin {
         zettel,
         zettel.parent.path + toId + rest + '.' + zettel.extension
       );
+    } else {
+      new Notice(`Couldn't find file for ID ${id}. ${checkSettingsMessage}`)
     }
   }
 
@@ -414,9 +418,17 @@ export default class NewZettel extends Plugin {
       id: "open-parent-zettel",
       name: "Open Parent Zettel",
       callback: () => {
-        let file = this.currentFile();
+        const file = this.currentFile();
         if (file) {
-          this.openZettel(this.parentID(this.fileToId(file.basename)));
+          const id = this.fileToId(file.basename);
+          const parentId = this.parentID(id)
+          if (parentId === '') {
+            new Notice(`No parent found for "${file.basename}". ${checkSettingsMessage}`)
+            return;
+          }
+          this.openZettel(parentId);
+        } else {
+          new Notice ('No file open')
         }
       },
     });
@@ -481,11 +493,10 @@ export default class NewZettel extends Plugin {
   }
 
   getZettels(): TFile[] {
+    const fileToId = (file: TFile) => this.fileToId(file.basename)
     return this.app.vault.getMarkdownFiles().filter(file => {
-      const ignore = /^[_layouts|templates|scripts]/;
-      return
-        this.fileToId(file.basename) !== '' &&
-        file.path.match(ignore) == null;
+      const ignore = !file.path.match(/^[_layouts|templates|scripts]/);
+      return ignore && fileToId(file) !== '';
     });
   }
 
@@ -497,11 +508,9 @@ export default class NewZettel extends Plugin {
 
   async getAllNoteTitles(): Promise<Map<string, TFile>> {
     const regex = /# (.+)\s*/;
-
     let titles: Map<string, TFile> = new Map();
     for (const file of this.getZettels()) {
       let text = await this.app.vault.cachedRead(file);
-
       let match = text.match(regex);
       if (match) {
         titles.set(match[1], file);
