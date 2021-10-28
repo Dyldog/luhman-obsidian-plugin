@@ -230,7 +230,12 @@ export default class NewZettel extends Plugin {
     placeCursorAtStartOfContent: boolean
   ) {
     let app = this.app;
-    let titleContent = "# " + title + "\n\n";
+    let titleContent = null;
+    if (title && title.length > 0) {
+      titleContent = "# " + title + "\n\n";
+    } else {
+      titleContent = ""; 
+    }
     let fullContent = titleContent + content;
     let file = await this.app.vault.create(path, fullContent);
     let active = app.workspace.getLeaf();
