@@ -485,7 +485,7 @@ export default class NewZettel extends Plugin {
       const ignore = /^(_layouts|templates|scripts)/;
       return
         this.fileToId(file.basename) !== '' &&
-        file.path?.match(ignore) === null;
+        file.path?.match(ignore) == null;
     });
   }
 
