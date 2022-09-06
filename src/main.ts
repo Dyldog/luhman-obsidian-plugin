@@ -232,7 +232,12 @@ export default class NewZettel extends Plugin {
     placeCursorAtStartOfContent: boolean
   ) {
     let app = this.app;
-    let titleContent = "# " + title + "\n\n";
+    let titleContent = null;
+    if (title && title.length > 0) {
+      titleContent = "# " + title + "\n\n";
+    } else {
+      titleContent = ""; 
+    }
     let fullContent = titleContent + content;
     let file = await this.app.vault.create(path, fullContent);
     let active = app.workspace.getLeaf();
@@ -495,7 +500,7 @@ export default class NewZettel extends Plugin {
   getZettels(): TFile[] {
     const fileToId = (file: TFile) => this.fileToId(file.basename)
     return this.app.vault.getMarkdownFiles().filter(file => {
-      const ignore = !file.path.match(/^[_layouts|templates|scripts]/);
+      const ignore = !file.path.match(/^(_layouts|templates|scripts)/);
       return ignore && fileToId(file) !== '';
     });
   }

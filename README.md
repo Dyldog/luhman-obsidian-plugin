@@ -23,3 +23,8 @@ Allows you to search for files by their inner markdown title (i.e: the first H1 
 ### Insert Zettel link
 
 Lets you search by markdown titles like the "Open zettel" command above, but inserts a link to the file instead of opening it.
+
+## Contributors
+
+- [pauloday](https://github.com/pauloday)
+- [quarterdane](https://github.com/quarterdane)
