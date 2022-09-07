@@ -286,7 +286,8 @@ export default class NewZettel extends Plugin {
       const fileID = this.fileToId(file.basename);
       const fileLink = "[[" + file.basename + "]]";
 
-      const editor = this.app.workspace.getActiveViewOfType(MarkdownView)?.editor;
+      const editor =
+        this.app.workspace.getActiveViewOfType(MarkdownView)?.editor;
       if (editor == null) {
         return;
       }
@@ -310,7 +311,10 @@ export default class NewZettel extends Plugin {
           .map((w) => w[0].toUpperCase() + w.slice(1))
           .join(" ");
         const selectionPos = editor!.listSelections()[0];
-        const positionCH = Math.max(selectionPos.head.ch, selectionPos.anchor.ch);
+        const positionCH = Math.max(
+          selectionPos.head.ch,
+          selectionPos.anchor.ch
+        );
         const position: EditorPosition = {
           line: selectionPos.anchor.line,
           ch: positionCH + 1,
@@ -367,7 +371,9 @@ export default class NewZettel extends Plugin {
     }
 
     for (const child of this.getDirectChildZettels(id)) {
-      const newChildID: string = this.firstAvailableID(this.firstChildOf(newID));
+      const newChildID: string = this.firstAvailableID(
+        this.firstChildOf(newID)
+      );
       await this.renameZettel(this.fileToId(child.basename), newChildID);
     }
 
@@ -499,7 +505,10 @@ export default class NewZettel extends Plugin {
 
       if (editor.getSelection()) {
         const selectionPos = editor.listSelections()[0];
-        const positionCH = Math.max(selectionPos.head.ch, selectionPos.anchor.ch);
+        const positionCH = Math.max(
+          selectionPos.head.ch,
+          selectionPos.anchor.ch
+        );
         position = { line: selectionPos.anchor.line, ch: positionCH + 1 };
         prefix = " ";
       } else {

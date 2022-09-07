@@ -5,9 +5,10 @@
     "main": "main.js",
     "scripts": {
         "prettier": "prettier --write 'src/**/*.+(ts|tsx|json|html|css)'",
-        "eslint": "eslint . --ext .ts,.tsx --fix",
+        "lint": "eslint . --ext .ts,.tsx --fix",
         "dev": "rollup --config rollup.config.js -w",
-        "release": "release-it",
+        "release": "release-it --'plugins.@release-it/bumper.out=\"manifest.json\"'",
+        "release-beta": "release-it --'plugins.@release-it/bumper.out=\"manifest-beta.json\"'",
         "build": "rollup --config rollup.config.js --environment BUILD:production"
     },
     "keywords": [],
@@ -32,47 +33,5 @@
         "rollup-plugin-import-css": "^2.0.1",
         "tslib": "^2.2.0",
         "typescript": "^4.2.4"
-    },
-    "release-it": {
-        "hooks": {
-            "before:init": [
-                "npm run prettier",
-                "npm run eslint"
-            ],
-            "after:bump": [
-                "json -I -f manifest.json -e \"this.version='${version}'\" -o json-4",
-                "json -I -f versions.json -e \"this['${version}']='$(cat manifest.json | json minAppVersion)'\" -o json-4",
-                "git add .",
-                "npm run build"
-            ],
-            "after:release": "echo Successfully released ${name} v${version} to ${repo.repository}."
-        },
-        "git": {
-            "commitMessage": "chore: release v${version}",
-            "tagName": "${version}",
-            "tagAnnotation": "Release v${version}"
-        },
-        "npm": {
-            "publish": false
-        },
-        "github": {
-            "release": true,
-            "assets": [
-                "main.js",
-                "manifest.json",
-                "styles.css"
-            ],
-            "releaseName": "${version}"
-        },
-        "plugins": {
-            "@release-it/bumper": {
-                "out": "manifest.json"
-            }
-        }
-    },
-    "config": {
-        "commitizen": {
-            "path": "./node_modules/cz-conventional-changelog"
-        }
     }
 }
