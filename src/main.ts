@@ -66,7 +66,7 @@ class LuhmanSettingTab extends PluginSettingTab {
   }
 
   display(): void {
-    let { containerEl } = this;
+    const { containerEl } = this;
     const { matchRule, separator, addTitle } = this.plugin.settings;
     containerEl.empty();
     containerEl.createEl("p", {
@@ -144,8 +144,8 @@ export default class NewZettel extends Plugin {
   }
 
   incrementStringIDComponent(id: string): string {
-    let comps = id.split("");
-    let last = comps.pop()!;
+    const comps = id.split("");
+    const last = comps.pop()!;
     return comps.concat([lettersIDComponentSuccessors[last]]).join("");
   }
 
@@ -166,13 +166,13 @@ export default class NewZettel extends Plugin {
   }
 
   incrementID(id: string): string {
-    var parts = id.match(idOnlyRegex)!;
-    var lastPart = parts.pop()!;
+    const parts = id.match(idOnlyRegex)!;
+    const lastPart = parts.pop()!;
     return parts.concat([this.incrementIDComponent(lastPart)]).join("");
   }
 
   parentID(id: string): string {
-    var parts = id.match(idOnlyRegex)!;
+    const parts = id.match(idOnlyRegex)!;
     if (parts) {
       parts.pop();
       return parts.join("");
@@ -216,7 +216,7 @@ export default class NewZettel extends Plugin {
   }
 
   firstAvailableID(startingID: string): string {
-    var nextID = startingID;
+    let nextID = startingID;
     while (this.idExists(nextID)) {
       nextID = this.incrementID(nextID);
     }
@@ -224,14 +224,14 @@ export default class NewZettel extends Plugin {
   }
 
   makeNoteForNextSiblingOf(sibling: TFile): string {
-    var nextID = this.firstAvailableID(
+    const nextID = this.firstAvailableID(
       this.incrementID(this.fileToId(sibling.basename))
     );
     return nextID;
   }
 
   makeNoteForNextChildOf(parent: TFile): string {
-    var childID = this.firstAvailableID(
+    const childID = this.firstAvailableID(
       this.firstChildOf(this.fileToId(parent.basename))
     );
     return childID;
@@ -243,29 +243,29 @@ export default class NewZettel extends Plugin {
     content: string,
     placeCursorAtStartOfContent: boolean
   ) {
-    let app = this.app;
+    const app = this.app;
     let titleContent = null;
     if (title && title.length > 0) {
       titleContent = "# " + title + "\n\n";
     } else {
       titleContent = "";
     }
-    let fullContent = titleContent + content;
-    let file = await this.app.vault.create(path, fullContent);
-    let active = app.workspace.getLeaf();
+    const fullContent = titleContent + content;
+    const file = await this.app.vault.create(path, fullContent);
+    const active = app.workspace.getLeaf();
     if (active == null) {
       return;
     }
 
     await active.openFile(file);
 
-    let editor = app.workspace.getActiveViewOfType(MarkdownView)?.editor;
+    const editor = app.workspace.getActiveViewOfType(MarkdownView)?.editor;
     if (editor == null) {
       return;
     }
 
     if (placeCursorAtStartOfContent) {
-      let position: EditorPosition = { line: 2, ch: 0 };
+      const position: EditorPosition = { line: 2, ch: 0 };
       editor.setCursor(position);
     } else {
       editor.exec("goEnd");
@@ -278,23 +278,23 @@ export default class NewZettel extends Plugin {
   }
 
   makeNoteFunction(idGenerator: (file: TFile) => string) {
-    var file = this.app.workspace.getActiveFile();
+    const file = this.app.workspace.getActiveFile();
     if (file == null) {
       return;
     }
     if (this.isZettelFile(file.name)) {
-      let fileID = this.fileToId(file.basename);
-      let fileLink = "[[" + file.basename + "]]";
+      const fileID = this.fileToId(file.basename);
+      const fileLink = "[[" + file.basename + "]]";
 
-      let editor = this.app.workspace.getActiveViewOfType(MarkdownView)?.editor;
+      const editor = this.app.workspace.getActiveViewOfType(MarkdownView)?.editor;
       if (editor == null) {
         return;
       }
 
-      let selection = editor.getSelection();
+      const selection = editor.getSelection();
 
-      let nextID = idGenerator.bind(this, file)();
-      let nextPath = (title: string) =>
+      const nextID = idGenerator.bind(this, file)();
+      const nextPath = (title: string) =>
         file?.path
           ? this.app.fileManager.getNewFileParent(file.path).path +
             "/" +
@@ -302,16 +302,16 @@ export default class NewZettel extends Plugin {
             (this.settings.addTitle ? this.settings.separator + title : "") +
             ".md"
           : "";
-      let newLink = "[[" + nextID + "]]";
+      const newLink = "[[" + nextID + "]]";
 
       if (selection) {
-        let title = selection
+        const title = selection
           .split(/\s+/)
           .map((w) => w[0].toUpperCase() + w.slice(1))
           .join(" ");
-        let selectionPos = editor!.listSelections()[0];
-        let positionCH = Math.max(selectionPos.head.ch, selectionPos.anchor.ch);
-        let position: EditorPosition = {
+        const selectionPos = editor!.listSelections()[0];
+        const positionCH = Math.max(selectionPos.head.ch, selectionPos.anchor.ch);
+        const position: EditorPosition = {
           line: selectionPos.anchor.line,
           ch: positionCH + 1,
         };
@@ -349,7 +349,7 @@ export default class NewZettel extends Plugin {
   }
 
   async moveChildrenDown(id: string) {
-    let children = this.getDirectChildZettels(id);
+    const children = this.getDirectChildZettels(id);
     for (const child of children) {
       await this.moveZettelDown(this.fileToId(child.basename));
     }
@@ -361,13 +361,13 @@ export default class NewZettel extends Plugin {
   }
 
   async outdentZettel(id: string) {
-    let newID = this.incrementID(this.parentID(id));
+    const newID = this.incrementID(this.parentID(id));
     if (this.idExists(newID)) {
       await this.moveZettelDown(newID);
     }
 
     for (const child of this.getDirectChildZettels(id)) {
-      let newChildID: string = this.firstAvailableID(this.firstChildOf(newID));
+      const newChildID: string = this.firstAvailableID(this.firstChildOf(newID));
       await this.renameZettel(this.fileToId(child.basename), newChildID);
     }
 
@@ -401,7 +401,7 @@ export default class NewZettel extends Plugin {
       name: "Insert Zettel Link",
       callback: async () => {
         // let completion = (te)
-        let titles = await this.getAllNoteTitles();
+        const titles = await this.getAllNoteTitles();
         new ZettelSuggester(
           this.app,
           titles,
@@ -417,7 +417,7 @@ export default class NewZettel extends Plugin {
       id: "open-zettel",
       name: "Open Zettel",
       callback: async () => {
-        let titles = await this.getAllNoteTitles();
+        const titles = await this.getAllNoteTitles();
 
         new ZettelSuggester(
           this.app,
@@ -455,7 +455,7 @@ export default class NewZettel extends Plugin {
       id: "outdent-zettel",
       name: "Outdent Zettel",
       callback: () => {
-        let file = this.currentFile();
+        const file = this.currentFile();
         if (file) {
           this.outdentZettel(this.fileToId(file.basename));
         }
@@ -473,7 +473,7 @@ export default class NewZettel extends Plugin {
   }
 
   openZettel(id: string) {
-    let file = this.app.vault
+    const file = this.app.vault
       .getMarkdownFiles()
       .filter((file) => this.fileToId(file.basename) == id)
       .first();
@@ -489,17 +489,17 @@ export default class NewZettel extends Plugin {
   }
 
   insertTextIntoCurrentNote(text: string) {
-    let view = this.app.workspace.getActiveViewOfType(MarkdownView);
+    const view = this.app.workspace.getActiveViewOfType(MarkdownView);
 
     if (view) {
-      let editor = view!.editor;
+      const editor = view!.editor;
 
       let position: EditorPosition;
-      var prefix: string = "";
+      let prefix = "";
 
       if (editor.getSelection()) {
-        let selectionPos = editor.listSelections()[0];
-        let positionCH = Math.max(selectionPos.head.ch, selectionPos.anchor.ch);
+        const selectionPos = editor.listSelections()[0];
+        const positionCH = Math.max(selectionPos.head.ch, selectionPos.anchor.ch);
         position = { line: selectionPos.anchor.line, ch: positionCH + 1 };
         prefix = " ";
       } else {
@@ -526,10 +526,10 @@ export default class NewZettel extends Plugin {
 
   async getAllNoteTitles(): Promise<Map<string, TFile>> {
     const regex = /# (.+)\s*/;
-    let titles: Map<string, TFile> = new Map();
+    const titles: Map<string, TFile> = new Map();
     for (const file of this.getZettels()) {
-      let text = await this.app.vault.cachedRead(file);
-      let match = text.match(regex);
+      const text = await this.app.vault.cachedRead(file);
+      const match = text.match(regex);
       if (match) {
         titles.set(match[1], file);
       }
@@ -547,11 +547,11 @@ class NewZettelModal extends Modal {
     super(app);
     this.completion = completion;
 
-    let { contentEl } = this;
+    const { contentEl } = this;
     contentEl.parentElement!.addClass("zettel-modal");
     this.titleEl.setText("New zettel title...");
 
-    let container = contentEl.createEl("div", {
+    const container = contentEl.createEl("div", {
       cls: "zettel-modal-container",
     });
     this.textBox = contentEl.createEl("input", {
@@ -567,7 +567,7 @@ class NewZettelModal extends Modal {
     });
     container.append(this.textBox);
 
-    let button = contentEl.createEl("input", {
+    const button = contentEl.createEl("input", {
       type: "button",
       value: "GO",
       cls: "zettel-modal-button",
@@ -585,7 +585,7 @@ class NewZettelModal extends Modal {
   }
 
   goTapped() {
-    let title = this.textBox.value;
+    const title = this.textBox.value;
     this.completion(title);
     this.close();
   }
@@ -614,7 +614,7 @@ class ZettelSuggester extends FuzzySuggestModal<string> {
   onOpen() {
     super.onOpen();
     this.inputEl.value = this.initialQuery;
-    var event = new Event("input");
+    const event = new Event("input");
     this.inputEl.dispatchEvent(event);
   }
 
@@ -629,16 +629,16 @@ class ZettelSuggester extends FuzzySuggestModal<string> {
   renderSuggestion(value: FuzzyMatch<string>, el: HTMLElement) {
     el.setText(value.item);
 
-    let matches = value.match.matches;
+    const matches = value.match.matches;
     if (matches == null || matches.length == 0) {
       return;
     }
-    let start = matches[0][0];
-    let end = matches[0][1];
+    const start = matches[0][0];
+    const end = matches[0][1];
 
-    let range = new Range();
+    const range = new Range();
 
-    let text = el.firstChild;
+    const text = el.firstChild;
     if (text == null) {
       return;
     }
