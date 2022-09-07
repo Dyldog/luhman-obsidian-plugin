@@ -14,7 +14,7 @@ import {
 import "./styles/styles.css";
 
 const idOnlyRegex = /([0-9]+|[a-z]+)/g;
-const checkSettingsMessage = 'Try checking the settings if this seems wrong.'
+const checkSettingsMessage = "Try checking the settings if this seems wrong.";
 
 const lettersIDComponentSuccessors: Record<string, string> = {
   a: "b",
@@ -52,10 +52,10 @@ interface LuhmanSettings {
 }
 
 const DEFAULT_SETTINGS: LuhmanSettings = {
-  matchRule: 'strict',
+  matchRule: "strict",
   addTitle: false,
-  separator: '⁝ '
-}
+  separator: "⁝ ",
+};
 
 class LuhmanSettingTab extends PluginSettingTab {
   plugin: NewZettel;
@@ -66,59 +66,69 @@ class LuhmanSettingTab extends PluginSettingTab {
   }
 
   display(): void {
-    let {containerEl} = this;
-    const {matchRule, separator, addTitle} = this.plugin.settings;
+    let { containerEl } = this;
+    const { matchRule, separator, addTitle } = this.plugin.settings;
     containerEl.empty();
-    containerEl.createEl('p', {text: 'The ID is a block of letters and numbers at the beginning of the filename'});
+    containerEl.createEl("p", {
+      text: "The ID is a block of letters and numbers at the beginning of the filename",
+    });
 
     new Setting(containerEl)
-      .setName('ID matching rule')
+      .setName("ID matching rule")
       .setDesc(
-'Strict means filenames consist of only an ID. ' +
-'Separator means the ID must be followed by the separator. ' +
-'Fuzzy treats the first non-alphanumeric character as the end of the ID.')
-      .addDropdown(setting => setting
-        .addOption('strict', 'Strict')
-        .addOption('separator', 'Separator')
-        .addOption('fuzzy', 'Fuzzy')
-        .setValue(matchRule)
-        .onChange(async (value) => {
-          this.plugin.settings.matchRule = value;
-          await this.plugin.saveSettings()
-          this.display()
-        }));
-
-    if (matchRule !== 'strict'){
-      new Setting(containerEl)
-        .setName('Add titles automatically')
-        .setDesc('Add the separator and the title of the note when creating filenames')
-        .setDisabled(matchRule !== 'strict')
-        .addToggle(setting => setting
-          .setValue(addTitle)
+        "Strict means filenames consist of only an ID. " +
+          "Separator means the ID must be followed by the separator. " +
+          "Fuzzy treats the first non-alphanumeric character as the end of the ID."
+      )
+      .addDropdown((setting) =>
+        setting
+          .addOption("strict", "Strict")
+          .addOption("separator", "Separator")
+          .addOption("fuzzy", "Fuzzy")
+          .setValue(matchRule)
           .onChange(async (value) => {
+            this.plugin.settings.matchRule = value;
+            await this.plugin.saveSettings();
+            this.display();
+          })
+      );
+
+    if (matchRule !== "strict") {
+      new Setting(containerEl)
+        .setName("Add titles automatically")
+        .setDesc(
+          "Add the separator and the title of the note when creating filenames"
+        )
+        .setDisabled(matchRule !== "strict")
+        .addToggle((setting) =>
+          setting.setValue(addTitle).onChange(async (value) => {
             this.plugin.settings.addTitle = value;
-            await this.plugin.saveSettings()
-            this.display()
-          }));
+            await this.plugin.saveSettings();
+            this.display();
+          })
+        );
     }
 
     const useSeparator =
-      matchRule !== 'strict' &&
-      (addTitle || matchRule === 'separator')
+      matchRule !== "strict" && (addTitle || matchRule === "separator");
 
     if (useSeparator) {
       new Setting(containerEl)
-        .setName('ID Separator')
-        .setDesc('Used between id and title, include whitespace padding if needed')
+        .setName("ID Separator")
+        .setDesc(
+          "Used between id and title, include whitespace padding if needed"
+        )
         .setDisabled(useSeparator)
-        .addText(text => text
-          .setPlaceholder('Enter your separator')
-          .setValue(separator)
-          .onChange(async (value) => {
-            this.plugin.settings.separator = value;
-            await this.plugin.saveSettings();
-          }));
-    }     
+        .addText((text) =>
+          text
+            .setPlaceholder("Enter your separator")
+            .setValue(separator)
+            .onChange(async (value) => {
+              this.plugin.settings.separator = value;
+              await this.plugin.saveSettings();
+            })
+        );
+    }
   }
 }
 
@@ -185,26 +195,24 @@ export default class NewZettel extends Plugin {
     return parentID + this.nextComponentOf(parentID);
   }
 
-  fileToId(filename: string): string {  
+  fileToId(filename: string): string {
     const ruleRegexes: Record<string, RegExp> = {
       strict: /^((?:[0-9]+|[a-z]+)+)$/,
       separator: new RegExp(
         `^((?:[0-9]+|[a-z]+)+)${this.settings.separator}.*`
       ),
-      fuzzy: /^((?:[0-9]+|[a-z]+)+).*/
-    }
+      fuzzy: /^((?:[0-9]+|[a-z]+)+).*/,
+    };
     const match = filename.match(ruleRegexes[this.settings.matchRule]);
     if (match) {
-      return match[1]
+      return match[1];
     }
-    return '';
+    return "";
   }
 
   idExists(id: string): boolean {
     const fileMatcher = (file: TFile) => this.fileToId(file.basename) === id;
-    return (
-      this.app.vault.getMarkdownFiles().filter(fileMatcher).length != 0
-    );
+    return this.app.vault.getMarkdownFiles().filter(fileMatcher).length != 0;
   }
 
   firstAvailableID(startingID: string): string {
@@ -216,12 +224,16 @@ export default class NewZettel extends Plugin {
   }
 
   makeNoteForNextSiblingOf(sibling: TFile): string {
-    var nextID = this.firstAvailableID(this.incrementID(this.fileToId(sibling.basename)));
+    var nextID = this.firstAvailableID(
+      this.incrementID(this.fileToId(sibling.basename))
+    );
     return nextID;
   }
 
   makeNoteForNextChildOf(parent: TFile): string {
-    var childID = this.firstAvailableID(this.firstChildOf(this.fileToId(parent.basename)));
+    var childID = this.firstAvailableID(
+      this.firstChildOf(this.fileToId(parent.basename))
+    );
     return childID;
   }
 
@@ -236,7 +248,7 @@ export default class NewZettel extends Plugin {
     if (title && title.length > 0) {
       titleContent = "# " + title + "\n\n";
     } else {
-      titleContent = ""; 
+      titleContent = "";
     }
     let fullContent = titleContent + content;
     let file = await this.app.vault.create(path, fullContent);
@@ -261,8 +273,8 @@ export default class NewZettel extends Plugin {
   }
 
   isZettelFile(name: string): boolean {
-    const mdRegex = /.*\.md$/
-    return mdRegex.exec(name) != null && this.fileToId(name) !== '';
+    const mdRegex = /.*\.md$/;
+    return mdRegex.exec(name) != null && this.fileToId(name) !== "";
   }
 
   makeNoteFunction(idGenerator: (file: TFile) => string) {
@@ -285,14 +297,11 @@ export default class NewZettel extends Plugin {
       let nextPath = (title: string) =>
         file?.path
           ? this.app.fileManager.getNewFileParent(file.path).path +
-              "/" +
-              nextID +
-              (this.settings.addTitle
-                ? this.settings.separator + title
-                : ''
-              ) +
-              ".md"
-          : '';
+            "/" +
+            nextID +
+            (this.settings.addTitle ? this.settings.separator + title : "") +
+            ".md"
+          : "";
       let newLink = "[[" + nextID + "]]";
 
       if (selection) {
@@ -315,7 +324,9 @@ export default class NewZettel extends Plugin {
         }).open();
       }
     } else {
-      new Notice(`Couldn't find ID in "${file.basename}". ${checkSettingsMessage}`)
+      new Notice(
+        `Couldn't find ID in "${file.basename}". ${checkSettingsMessage}`
+      );
     }
   }
 
@@ -323,17 +334,17 @@ export default class NewZettel extends Plugin {
     const sep = this.settings.separator;
     const zettel = this.app.vault
       .getMarkdownFiles()
-      .filter(file => this.fileToId(file.basename) === id)
+      .filter((file) => this.fileToId(file.basename) === id)
       .first();
     if (zettel) {
       const id = this.fileToId(zettel.basename);
-      const rest = zettel.basename.split(id)[1]
+      const rest = zettel.basename.split(id)[1];
       this.app.fileManager.renameFile(
         zettel,
-        zettel.parent.path + toId + rest + '.' + zettel.extension
+        zettel.parent.path + toId + rest + "." + zettel.extension
       );
     } else {
-      new Notice(`Couldn't find file for ID ${id}. ${checkSettingsMessage}`)
+      new Notice(`Couldn't find file for ID ${id}. ${checkSettingsMessage}`);
     }
   }
 
@@ -365,7 +376,7 @@ export default class NewZettel extends Plugin {
 
   async onload() {
     console.log("loading New Zettel");
-    this.loadSettings()
+    this.loadSettings();
     this.addSettingTab(new LuhmanSettingTab(this.app, this));
     // this.app.workspace.onLayoutReady(this.initialize);
 
@@ -426,14 +437,16 @@ export default class NewZettel extends Plugin {
         const file = this.currentFile();
         if (file) {
           const id = this.fileToId(file.basename);
-          const parentId = this.parentID(id)
-          if (parentId === '') {
-            new Notice(`No parent found for "${file.basename}". ${checkSettingsMessage}`)
+          const parentId = this.parentID(id);
+          if (parentId === "") {
+            new Notice(
+              `No parent found for "${file.basename}". ${checkSettingsMessage}`
+            );
             return;
           }
           this.openZettel(parentId);
         } else {
-          new Notice ('No file open')
+          new Notice("No file open");
         }
       },
     });
@@ -498,10 +511,10 @@ export default class NewZettel extends Plugin {
   }
 
   getZettels(): TFile[] {
-    const fileToId = (file: TFile) => this.fileToId(file.basename)
-    return this.app.vault.getMarkdownFiles().filter(file => {
+    const fileToId = (file: TFile) => this.fileToId(file.basename);
+    return this.app.vault.getMarkdownFiles().filter((file) => {
       const ignore = !file.path.match(/^(_layouts|templates|scripts)/);
-      return ignore && fileToId(file) !== '';
+      return ignore && fileToId(file) !== "";
     });
   }
 
