@@ -22,10 +22,5 @@
           "styles.css"
       ],
       "releaseName": "${version}"
-  },
-  "plugins": {
-      "@release-it/bumper": {
-          "out": "manifest.json"
-      }
   }
 }
