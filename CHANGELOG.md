@@ -16,6 +16,7 @@ Sections are used under each version as follows:
 ### Added
 
 - Added notifications for some failures.
+- Added CHANGELOG.
 
 ### Fixed
 
