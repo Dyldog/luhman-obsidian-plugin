@@ -15,6 +15,7 @@ Sections are used under each version as follows:
 
 ### Added
 
+- Added beta versions (via [BRAT]).
 - Added notifications for some failures.
 - Added CHANGELOG.
 
@@ -53,7 +54,11 @@ Sections are used under each version as follows:
 - Initial Release
 
 
+
+
+
 <!-- Links -->
+[BRAT]: https://github.com/TfTHacker/obsidian42-brat
 [Unreleased]: https://github.com/Dyldog/luhman-obsidian-plugin/compare/1.1.0...HEAD
 [1.1.0]: https://github.com/Dyldog/luhman-obsidian-plugin/compare/1.0.2...1.1.0
 [1.0.2]: https://github.com/Dyldog/luhman-obsidian-plugin/compare/1.0.1...1.0.2
