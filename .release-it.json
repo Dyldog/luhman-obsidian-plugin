@@ -4,6 +4,12 @@
         "npm run prettier",
         "npm run lint"
     ],
+    "after:bump": [
+      "json -I -f manifest.json -e \"this.version='${version}'\" -o json-4",
+      "json -I -f versions.json -e \"this['${version}']='$(cat manifest.json | json minAppVersion)'\" -o json-4",
+      "git add .",
+      "npm run build"
+    ],
     "after:release": "echo Successfully released ${name} v${version} to ${repo.repository}."
   },
   "git": {
