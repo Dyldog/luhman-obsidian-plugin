@@ -1,3 +1,5 @@
 node_modules
 .DS_Store
 main.js
+style.css
+.env

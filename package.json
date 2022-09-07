@@ -7,8 +7,8 @@
         "prettier": "prettier --write 'src/**/*.+(ts|tsx|json|html|css)'",
         "lint": "eslint . --ext .ts,.tsx --fix",
         "dev": "rollup --config rollup.config.js -w",
-        "release": "release-it --'plugins.@release-it/bumper.out=\"manifest.json\"'",
-        "release-beta": "release-it --'plugins.@release-it/bumper.out=\"manifest-beta.json\"'",
+        "release": "dotenv release-it --'plugins.@release-it/bumper.out=\"manifest.json\"'",
+        "release-beta": "dotenv release-it --'plugins.@release-it/bumper.out=\"manifest-beta.json\"'",
         "build": "rollup --config rollup.config.js --environment BUILD:production"
     },
     "keywords": [],
@@ -24,6 +24,7 @@
         "@typescript-eslint/eslint-plugin": "^5.36.2",
         "@typescript-eslint/parser": "^5.36.2",
         "assert-never": "^1.2.1",
+        "dotenv-cli": "^6.0.0",
         "eslint": "^8.23.0",
         "json": "^11.0.0",
         "obsidian": "^0.12.0",

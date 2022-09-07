@@ -1,8 +1,0 @@
-.zettel-modal-container {
-  display: flex;
-}
-
-.zettel-modal-textbox {
-  flex-grow: 100;
-  margin-right: 10px;
-}
