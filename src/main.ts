@@ -303,7 +303,9 @@ export default class NewZettel extends Plugin {
             (this.settings.addTitle ? this.settings.separator + title : "") +
             ".md"
           : "";
-      const newLink = "[[" + nextID + "]]";
+      
+      const newLink = (title: string) =>`[[${nextID}${(this.settings.addTitle ? this.settings.separator + title : "")}]]`
+      // const newLink = "[[" + nextID + "]]";
 
       if (selection) {
         const title = selection
@@ -319,11 +321,11 @@ export default class NewZettel extends Plugin {
           line: selectionPos.anchor.line,
           ch: positionCH + 1,
         };
-        editor!.replaceRange(" " + newLink, position, position);
+        editor!.replaceRange(" " + newLink(title), position, position);
         this.makeNote(nextPath(title), title, fileLink, true);
       } else {
         new NewZettelModal(this.app, (title: string) => {
-          this.insertTextIntoCurrentNote(newLink);
+          this.insertTextIntoCurrentNote(newLink(title));
           this.makeNote(nextPath(title), title, fileLink, true);
         }).open();
       }
@@ -515,7 +517,7 @@ export default class NewZettel extends Plugin {
         position = editor.getCursor();
       }
 
-      editor.replaceRange(" " + text, position, position);
+      editor.replaceRange(prefix + text, position, position);
     }
   }
 

@@ -21,6 +21,9 @@ Sections are used under each version as follows:
 
 ### Fixed
 
+- Fixed [BUG] On Create Sibling or Child Note, link to child or sibling incorrect #24
+- Fixed [BUG] Weird space added when making link to zettle
+#30
 - Add zettel command wasn't working.
 - Titles were to `# \n\n` by default when user didn't provide a title.
 - Ignore filter for getting zettels was configured incorrectly.
