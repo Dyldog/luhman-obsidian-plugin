@@ -1,0 +1,102 @@
+name: Bug Report
+description: Create a report to help us improve
+title: "[BUG] Title"
+labels: [bug, triage]
+assignees:
+  - eforen
+  - brannonh
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for taking the time to fill out this bug report!
+  - type: checkboxes
+    id: searched-req
+    attributes:
+      label: Issue Searching
+      description: Have you searched for similar issues?
+      options:
+        - label: I have searched for similar issues that are **open**.
+          required: true
+        - label: I have searched for similar issues that are **closed**.
+          required: true
+  - type: dropdown
+    id: otherIssues
+    attributes:
+      label: OtherIssues
+      description: When you preformed the search what did you find?
+      options:
+        - No other similar issues closed or open.
+        - Similar issues open, however I feel this issue is difrent enough to warrent a new issue.
+        - Similar issues closed, however I feel this issue warrent a new issue.
+        - Similar issues closed, however I could not figure out how to reopen the other issue.
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Describe this bug
+      placeholder: Tell us what you see! Or better take a screenshot and paste it in here.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction steps
+      description: What steps are needed to reproduce this bug?
+      placeholder: |
+        Go to '...'
+        Click on '....'
+        Scroll down to '....'
+        See error
+    validations:
+      required: true
+  - type: textarea
+    id: expectation
+    attributes:
+      label: Expected Result
+      description: What you expected to happen.
+      placeholder: I expected to see a potato.
+    validations:
+      required: true
+  - type: textarea
+    id: actuality
+    attributes:
+      label: Actual Result
+      description: What happened instead of your expectation.
+      placeholder: It displayed a tomato.
+    validations:
+      required: true
+  - type: dropdown
+    id: version
+    attributes:
+      label: Version
+      description: What version of the plugin are you running?
+      options:
+        - 1.1.1 (Prerelease Built from Source)
+        - 1.1.0 (Current Version)
+        - < 1.1.0 (Old Versions)
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevent log output
+      description: Please copy and paste any relevant log output. This will be automatically formatted into code, so no need for backticks.
+      render: shell
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: If applicable, add screenshots to help explain your problem.
+      placeholder: Take a screenshot and paste it in here.
+    validations:
+      required: false
+  - type: textarea
+    id: notes
+    attributes:
+      label: Other Notes
+      description: "Anything else you want to tell us."
+  - type: markdown
+    attributes:
+      value: |
+        Do you have a grayed out submit button that is unclickable? If so that means you need to complete the feilds that have a red asterisk next to them.
