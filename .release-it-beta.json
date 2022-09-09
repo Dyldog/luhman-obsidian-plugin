@@ -26,6 +26,10 @@
   "plugins": {
     "@release-it/bumper": {
         "out": "manifest-beta.json"
+    },
+    "@release-it/keep-a-changelog": {
+        "addVersionUrl": "true",
+        "keepUnreleased": "true"
     }
   },
   "preRelease": "beta"

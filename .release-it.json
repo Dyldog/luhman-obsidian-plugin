@@ -27,6 +27,10 @@
   "plugins": {
     "@release-it/bumper": {
         "out": "manifest.json"
+    },
+    "@release-it/keep-a-changelog": {
+        "addVersionUrl": "true",
+        "addUnreleased": "true"
     }
   }
 }
