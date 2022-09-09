@@ -16,7 +16,7 @@ Sections are used under each version as follows:
 
 ### Added
 
-- Documentation for the release process.
+- Added documentation for the release process.
 - Added beta versions (via [BRAT]).
 - Added notifications for some failures.
 - Added CHANGELOG.
