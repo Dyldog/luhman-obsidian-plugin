@@ -18,6 +18,7 @@ We use `@release-it/release-it` to generate new releases of this plugin.
    4. At `? Push?` prompt, enter `Y` to push the changes to the remote.
    5. At `? Create a pre-release on GitHub (vX.Y.Z-beta.A)?` prompt, enter `Y` to create the release on GitHub.
 4. Verify beta release.
+
 ## Official Release
 
 1. Ensure you are on the `master` branch.
