@@ -4,11 +4,10 @@
         "npm run prettier",
         "npm run lint"
     ],
-    "after:release": "echo Successfully released ${name} v${version} to ${repo.repository}."
+    "after:release": "echo Successfully released ${name} BETA v${version} to ${repo.repository}."
   },
   "git": {
       "commitMessage": "Release v${version}",
-      "requireBranch": "master",
       "tagName": "v${version}",
       "tagAnnotation": "Release v${version}"
   },
@@ -16,17 +15,18 @@
       "publish": false
   },
   "github": {
+      "release": true,
       "assets": [
           "main.js",
           "manifest.json",
           "styles.css"
       ],
-      "release": true,
       "releaseName": "v${version}"
   },
   "plugins": {
     "@release-it/bumper": {
-        "out": "manifest.json"
+        "out": "manifest-beta.json"
     }
-  }
+  },
+  "preRelease": "beta"
 }
