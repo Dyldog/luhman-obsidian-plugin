@@ -3,3 +3,5 @@ node_modules
 main.js
 style.css
 .env
+/data.json
+/styles.css
