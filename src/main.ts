@@ -279,10 +279,7 @@ export default class NewZettel extends Plugin {
     return mdRegex.exec(name) != null && this.fileToId(name) !== "";
   }
 
-  makeNoteFunction(
-    idGenerator: (file: TFile) => string,
-    openNewFile = true
-  ) {
+  makeNoteFunction(idGenerator: (file: TFile) => string, openNewFile = true) {
     const file = this.app.workspace.getActiveFile();
     if (file == null) {
       return;
