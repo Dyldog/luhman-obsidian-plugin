@@ -241,7 +241,8 @@ export default class NewZettel extends Plugin {
     path: string,
     title: string,
     content: string,
-    placeCursorAtStartOfContent: boolean
+    placeCursorAtStartOfContent: boolean,
+    openZettel: boolean = false
   ) {
     const app = this.app;
     let titleContent = null;
@@ -256,6 +257,7 @@ export default class NewZettel extends Plugin {
     if (active == null) {
       return;
     }
+    if(openZettel == false) return
 
     await active.openFile(file);
 
@@ -277,7 +279,7 @@ export default class NewZettel extends Plugin {
     return mdRegex.exec(name) != null && this.fileToId(name) !== "";
   }
 
-  makeNoteFunction(idGenerator: (file: TFile) => string) {
+  makeNoteFunction(idGenerator: (file: TFile) => string, openNewFile: boolean = true) {
     const file = this.app.workspace.getActiveFile();
     if (file == null) {
       return;
@@ -322,11 +324,13 @@ export default class NewZettel extends Plugin {
           ch: positionCH + 1,
         };
         editor!.replaceRange(" " + newLink(title), position, position);
-        this.makeNote(nextPath(title), title, fileLink, true);
+        this.makeNote(nextPath(title), title, fileLink, true, openNewFile);
       } else {
-        new NewZettelModal(this.app, (title: string) => {
+        new NewZettelModal(this.app, (title: string, options) => {
           this.insertTextIntoCurrentNote(newLink(title));
-          this.makeNote(nextPath(title), title, fileLink, true);
+          this.makeNote(nextPath(title), title, fileLink, true, options.openNewZettel);
+        }, {
+          openNewZettel: openNewFile
         }).open();
       }
     } else {
@@ -401,6 +405,22 @@ export default class NewZettel extends Plugin {
       name: "New Child Zettel Note",
       callback: () => {
         this.makeNoteFunction(this.makeNoteForNextChildOf);
+      },
+    });
+    
+    this.addCommand({
+      id: "new-sibling-note-dont-open",
+      name: "New Sibling Zettel Note (Don't Open)",
+      callback: () => {
+        this.makeNoteFunction(this.makeNoteForNextSiblingOf, false);
+      },
+    });
+
+    this.addCommand({
+      id: "new-child-note-dont-open",
+      name: "New Child Zettel Note (Don't Open)",
+      callback: () => {
+        this.makeNoteFunction(this.makeNoteForNextChildOf, false);
       },
     });
 
@@ -550,21 +570,41 @@ export default class NewZettel extends Plugin {
   }
 }
 
-class NewZettelModal extends Modal {
-  public completion: (text: string) => void;
-  private textBox: HTMLInputElement;
+type ZettelModelCallback = (text: string, options: ZettelModelOptions) => void;
+type ZettelModelOptions = {
+  openNewZettel: boolean
+}
 
-  constructor(app: App, completion: (title: string) => void) {
+const MakeZettelModelOptionDefault: ()=>ZettelModelOptions = () => ({
+  openNewZettel: true
+})
+
+class NewZettelModal extends Modal {
+  public completion: ZettelModelCallback;
+  private textBox: HTMLInputElement;
+  private openNewZettelCheckbox: HTMLInputElement;
+
+  constructor(app: App, completion: ZettelModelCallback, options:ZettelModelOptions = MakeZettelModelOptionDefault()) {
     super(app);
     this.completion = completion;
 
+    /***********************************
+     ** Model Title                   **
+     ***********************************/
     const { contentEl } = this;
     contentEl.parentElement!.addClass("zettel-modal");
     this.titleEl.setText("New zettel title...");
 
-    const container = contentEl.createEl("div", {
+    /***********************************
+     ** Name and GO area              **
+     ***********************************/
+
+    // Setup the container
+    const main_container = contentEl.createEl("div", {
       cls: "zettel-modal-container",
     });
+    
+    // Add the textBox
     this.textBox = contentEl.createEl("input", {
       type: "text",
       cls: "zettel-modal-textbox",
@@ -576,17 +616,50 @@ class NewZettelModal extends Modal {
         this.goTapped();
       }
     });
-    container.append(this.textBox);
+    main_container.append(this.textBox);
 
+    // Add the go button
     const button = contentEl.createEl("input", {
       type: "button",
       value: "GO",
       cls: "zettel-modal-button",
     });
     button.addEventListener("click", (e: Event) => this.goTapped());
-    container.append(button);
+    main_container.append(button);
 
-    contentEl.append(container);
+    contentEl.append(main_container);    
+
+    /***********************************
+     ** New Zettel Options            **
+     ***********************************/
+
+    // Setup the container
+    const options_container = contentEl.appendChild(
+        contentEl.createEl("div", {
+          cls: ["zettel-modal-container", "zettel-options-container"],
+        })
+    );
+    // Create label inside the container
+    const label = options_container.appendChild(
+      contentEl.createEl("label", {
+        cls: ["label", "zettel-label"]
+      })
+    )
+
+    // Create label
+    const openNewZettelCheckboxLabel = label.appendChild(contentEl.createEl("div", {cls:["labelText"]}))
+    openNewZettelCheckboxLabel.innerText = "Open New Zettel on Creation"
+
+    // Create checkbox inside the container
+    this.openNewZettelCheckbox = label.appendChild(
+      contentEl.createEl("input", {
+        type:"checkbox",
+        cls: ["zettel-modal-checkbox"],
+        value: options.openNewZettel.toString()
+      })
+    )
+    this.openNewZettelCheckbox.id = "zettel-modal-option-openZettel"
+    this.openNewZettelCheckbox.checked = options.openNewZettel
   }
 
   onOpen() {
@@ -597,7 +670,10 @@ class NewZettelModal extends Modal {
 
   goTapped() {
     const title = this.textBox.value;
-    this.completion(title);
+    const openNewZettel = this.openNewZettelCheckbox.checked
+    this.completion(title, {
+      openNewZettel
+    });
     this.close();
   }
 }
