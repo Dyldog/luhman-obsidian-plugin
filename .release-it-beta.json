@@ -8,7 +8,7 @@
   },
   "git": {
       "commitMessage": "Release v${version}",
-      "tagName": "v${version}",
+      "tagName": "${version}",
       "tagAnnotation": "Release v${version}"
   },
   "npm": {

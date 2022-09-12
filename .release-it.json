@@ -22,7 +22,7 @@
           "styles.css"
       ],
       "release": true,
-      "releaseName": "v${version}"
+      "releaseName": "${version}"
   },
   "plugins": {
     "@release-it/bumper": {
