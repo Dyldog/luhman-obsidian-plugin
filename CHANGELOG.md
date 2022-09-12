@@ -14,6 +14,8 @@ Sections are used under each version as follows:
 
 ## [Unreleased]
 
+## [1.1.1] - 2022-09-12
+
 ### Added
 
 - Added documentation for the release process.
@@ -68,8 +70,10 @@ Sections are used under each version as follows:
 <!-- Links -->
 [BRAT]: https://github.com/TfTHacker/obsidian42-brat
 
-[Unreleased]: https://github.com/Dyldog/luhman-obsidian-plugin/compare/1.1.0...HEAD
+[unreleased]: https://github.com/Dyldog/luhman-obsidian-plugin/compare/v1.1.1...HEAD
 [1.1.0]: https://github.com/Dyldog/luhman-obsidian-plugin/compare/1.0.2...1.1.0
 [1.0.2]: https://github.com/Dyldog/luhman-obsidian-plugin/compare/1.0.1...1.0.2
 [1.0.1]: https://github.com/Dyldog/luhman-obsidian-plugin/compare/1.0.0...1.0.1
 [1.0.0]: https://github.com/Dyldog/luhman-obsidian-plugin/releases/tag/1.0.0
+
+[1.1.1]: https://github.com/Dyldog/luhman-obsidian-plugin/releases/tag/v1.1.1
