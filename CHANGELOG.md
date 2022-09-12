@@ -13,6 +13,8 @@ Sections are used under each version as follows:
 - `Security` in case of vulnerabilities.
 
 ## [Unreleased]
+
+## [1.1.3] - 2022-09-12
 * Fixed issue with Release-It config
 ## [1.1.2] - 2022-09-12
 * Something external changed the name of the project in obsidian and made it uninstallable. Updated manifest to match.
@@ -73,11 +75,12 @@ Sections are used under each version as follows:
 <!-- Links -->
 [BRAT]: https://github.com/TfTHacker/obsidian42-brat
 
-[unreleased]: https://github.com/Dyldog/luhman-obsidian-plugin/compare/v1.1.2...HEAD
+[unreleased]: https://github.com/Dyldog/luhman-obsidian-plugin/compare/v1.1.3...HEAD
 [1.1.0]: https://github.com/Dyldog/luhman-obsidian-plugin/compare/1.0.2...1.1.0
 [1.0.2]: https://github.com/Dyldog/luhman-obsidian-plugin/compare/1.0.1...1.0.2
 [1.0.1]: https://github.com/Dyldog/luhman-obsidian-plugin/compare/1.0.0...1.0.1
 [1.0.0]: https://github.com/Dyldog/luhman-obsidian-plugin/releases/tag/1.0.0
 
+[1.1.3]: https://github.com/Dyldog/luhman-obsidian-plugin/compare/v1.1.2...v1.1.3
 [1.1.2]: https://github.com/Dyldog/luhman-obsidian-plugin/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/Dyldog/luhman-obsidian-plugin/releases/tag/v1.1.1
