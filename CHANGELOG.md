@@ -25,7 +25,7 @@ Sections are used under each version as follows:
 - Added new command `New Sibling Zettel Note (Don't Open)` same as `New Sibling Zettel Note` but defaults `Open New Zettel on Creation` to false
 
 ### Fixed
-
+- Fixed [BUG] Weird Static Space Behavior with Create Child/Sibling Selection #32
 - Fixed [BUG] On Create Sibling or Child Note, link to child or sibling incorrect #24
 - Fixed [BUG] Weird space added when making link to zettle
 #30
