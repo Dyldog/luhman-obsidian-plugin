@@ -14,6 +14,8 @@ Sections are used under each version as follows:
 
 ## [Unreleased]
 
+## [1.1.4] - 2022-09-12
+
 * Fixed issue with Release-It config
 - Added documentation for the release process.
 - Added beta versions (via [BRAT]).
@@ -92,12 +94,13 @@ Sections are used under each version as follows:
 <!-- Links -->
 [BRAT]: https://github.com/TfTHacker/obsidian42-brat
 
-[unreleased]: https://github.com/Dyldog/luhman-obsidian-plugin/compare/v1.1.3...HEAD
+[unreleased]: https://github.com/Dyldog/luhman-obsidian-plugin/compare/1.1.4...HEAD
 [1.1.0]: https://github.com/Dyldog/luhman-obsidian-plugin/compare/1.0.2...1.1.0
 [1.0.2]: https://github.com/Dyldog/luhman-obsidian-plugin/compare/1.0.1...1.0.2
 [1.0.1]: https://github.com/Dyldog/luhman-obsidian-plugin/compare/1.0.0...1.0.1
 [1.0.0]: https://github.com/Dyldog/luhman-obsidian-plugin/releases/tag/1.0.0
 
+[1.1.4]: https://github.com/Dyldog/luhman-obsidian-plugin/compare/v1.1.3...1.1.4
 [1.1.3]: https://github.com/Dyldog/luhman-obsidian-plugin/compare/v1.1.2...v1.1.3
 [1.1.2]: https://github.com/Dyldog/luhman-obsidian-plugin/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/Dyldog/luhman-obsidian-plugin/releases/tag/v1.1.1
