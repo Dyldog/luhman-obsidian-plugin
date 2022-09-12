@@ -9,7 +9,7 @@
   "git": {
       "commitMessage": "Release v${version}",
       "requireBranch": "master",
-      "tagName": "v${version}",
+      "tagName": "${version}",
       "tagAnnotation": "Release v${version}"
   },
   "npm": {
@@ -22,7 +22,7 @@
           "styles.css"
       ],
       "release": true,
-      "releaseName": "${version}"
+      "releaseName": "v${version}"
   },
   "plugins": {
     "@release-it/bumper": {

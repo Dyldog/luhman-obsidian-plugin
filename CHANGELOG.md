@@ -14,6 +14,23 @@ Sections are used under each version as follows:
 
 ## [Unreleased]
 
+* Fixed issue with Release-It config
+- Added documentation for the release process.
+- Added beta versions (via [BRAT]).
+- Added notifications for some failures.
+- Added CHANGELOG.
+- Added `Open New Zettel on Creation` checkbox on Model screen
+- Added new command `New Child Zettel Note (Don't Open)` same as `New Child Zettel Note` but defaults `Open New Zettel on Creation` to false
+- Added new command `New Sibling Zettel Note (Don't Open)` same as `New Sibling Zettel Note` but defaults `Open New Zettel on Creation` to false
+
+### Fixed
+- Fixed [BUG] Weird Static Space Behavior with Create Child/Sibling Selection #32
+- Fixed [BUG] On Create Sibling or Child Note, link to child or sibling incorrect #24
+- Fixed [BUG] Weird space added when making link to zettle
+#30
+- Add zettel command wasn't working.
+- Titles were set to `# \n\n` by default when user didn't provide a title.
+- Ignore filter for getting zettels was configured incorrectly.
 ## [1.1.3] - 2022-09-12
 * Fixed issue with Release-It config
 ## [1.1.2] - 2022-09-12
