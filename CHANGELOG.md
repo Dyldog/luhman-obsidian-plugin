@@ -13,7 +13,7 @@ Sections are used under each version as follows:
 - `Security` in case of vulnerabilities.
 
 ## [Unreleased]
-
+* Fixed issue with Release-It config
 ## [1.1.2] - 2022-09-12
 * Something external changed the name of the project in obsidian and made it uninstallable. Updated manifest to match.
 
