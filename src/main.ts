@@ -242,7 +242,7 @@ export default class NewZettel extends Plugin {
     title: string,
     content: string,
     placeCursorAtStartOfContent: boolean,
-    openZettel: boolean = false
+    openZettel = false
   ) {
     const app = this.app;
     let titleContent = null;
@@ -257,7 +257,7 @@ export default class NewZettel extends Plugin {
     if (active == null) {
       return;
     }
-    if(openZettel == false) return
+    if (openZettel == false) return;
 
     await active.openFile(file);
 
@@ -279,7 +279,10 @@ export default class NewZettel extends Plugin {
     return mdRegex.exec(name) != null && this.fileToId(name) !== "";
   }
 
-  makeNoteFunction(idGenerator: (file: TFile) => string, openNewFile: boolean = true) {
+  makeNoteFunction(
+    idGenerator: (file: TFile) => string,
+    openNewFile = true
+  ) {
     const file = this.app.workspace.getActiveFile();
     if (file == null) {
       return;
@@ -305,17 +308,20 @@ export default class NewZettel extends Plugin {
             (this.settings.addTitle ? this.settings.separator + title : "") +
             ".md"
           : "";
-      
-      const newLink = (title: string) =>`[[${nextID}${(this.settings.addTitle ? this.settings.separator + title : "")}]]`
+
+      const newLink = (title: string) =>
+        `[[${nextID}${
+          this.settings.addTitle ? this.settings.separator + title : ""
+        }]]`;
       // const newLink = "[[" + nextID + "]]";
 
       if (selection) {
-        // This current solution eats line returns spaces but thats 
+        // This current solution eats line returns spaces but thats
         // fine as it is turning the selection into a title so it makes sense
-        const selectionTrimStart = selection.trimStart()
-        const selectionTrimEnd = selectionTrimStart.trimEnd()
-        const spaceBefore = selection.length - selectionTrimStart.length
-        const spaceAfter = selectionTrimStart.length - selectionTrimEnd.length
+        const selectionTrimStart = selection.trimStart();
+        const selectionTrimEnd = selectionTrimStart.trimEnd();
+        const spaceBefore = selection.length - selectionTrimStart.length;
+        const spaceAfter = selectionTrimStart.length - selectionTrimEnd.length;
         const title = selectionTrimEnd
           .split(/\s+/)
           .map((w) => w[0].toUpperCase() + w.slice(1))
@@ -325,22 +331,41 @@ export default class NewZettel extends Plugin {
            how ever replaceRange does not accept it both ways and 
            gets weird if we just pass in the anchor then the head
            so here we create a vertual anchor and head position to pass in */
-        const anchorCorrect = selectionPos.anchor.line == selectionPos.head.line ? // If the anchor and head are on the same line
-          selectionPos.anchor.ch <= selectionPos.head.ch : // Then if anchor is before the head
-          selectionPos.anchor.line < selectionPos.head.line; // else they are not on the same line and just check if anchor is before head
-        
+        const anchorCorrect =
+          selectionPos.anchor.line == selectionPos.head.line // If the anchor and head are on the same line
+            ? selectionPos.anchor.ch <= selectionPos.head.ch // Then if anchor is before the head
+            : selectionPos.anchor.line < selectionPos.head.line; // else they are not on the same line and just check if anchor is before head
+
         // if anchorCorrect use as is, else switch
-        const virtualAnchor = anchorCorrect ? selectionPos.anchor : selectionPos.head
-        const virtualHead = anchorCorrect ? selectionPos.head : selectionPos.anchor
-        editor!.replaceRange(' '.repeat(spaceBefore) + newLink(title) + ' '.repeat(spaceAfter), virtualAnchor, virtualHead);
+        const virtualAnchor = anchorCorrect
+          ? selectionPos.anchor
+          : selectionPos.head;
+        const virtualHead = anchorCorrect
+          ? selectionPos.head
+          : selectionPos.anchor;
+        editor!.replaceRange(
+          " ".repeat(spaceBefore) + newLink(title) + " ".repeat(spaceAfter),
+          virtualAnchor,
+          virtualHead
+        );
         this.makeNote(nextPath(title), title, fileLink, true, openNewFile);
       } else {
-        new NewZettelModal(this.app, (title: string, options) => {
-          this.insertTextIntoCurrentNote(newLink(title));
-          this.makeNote(nextPath(title), title, fileLink, true, options.openNewZettel);
-        }, {
-          openNewZettel: openNewFile
-        }).open();
+        new NewZettelModal(
+          this.app,
+          (title: string, options) => {
+            this.insertTextIntoCurrentNote(newLink(title));
+            this.makeNote(
+              nextPath(title),
+              title,
+              fileLink,
+              true,
+              options.openNewZettel
+            );
+          },
+          {
+            openNewZettel: openNewFile,
+          }
+        ).open();
       }
     } else {
       new Notice(
@@ -416,7 +441,7 @@ export default class NewZettel extends Plugin {
         this.makeNoteFunction(this.makeNoteForNextChildOf);
       },
     });
-    
+
     this.addCommand({
       id: "new-sibling-note-dont-open",
       name: "New Sibling Zettel Note (Don't Open)",
@@ -581,19 +606,23 @@ export default class NewZettel extends Plugin {
 
 type ZettelModelCallback = (text: string, options: ZettelModelOptions) => void;
 type ZettelModelOptions = {
-  openNewZettel: boolean
-}
+  openNewZettel: boolean;
+};
 
-const MakeZettelModelOptionDefault: ()=>ZettelModelOptions = () => ({
-  openNewZettel: true
-})
+const MakeZettelModelOptionDefault: () => ZettelModelOptions = () => ({
+  openNewZettel: true,
+});
 
 class NewZettelModal extends Modal {
   public completion: ZettelModelCallback;
   private textBox: HTMLInputElement;
   private openNewZettelCheckbox: HTMLInputElement;
 
-  constructor(app: App, completion: ZettelModelCallback, options:ZettelModelOptions = MakeZettelModelOptionDefault()) {
+  constructor(
+    app: App,
+    completion: ZettelModelCallback,
+    options: ZettelModelOptions = MakeZettelModelOptionDefault()
+  ) {
     super(app);
     this.completion = completion;
 
@@ -612,7 +641,7 @@ class NewZettelModal extends Modal {
     const main_container = contentEl.createEl("div", {
       cls: "zettel-modal-container",
     });
-    
+
     // Add the textBox
     this.textBox = contentEl.createEl("input", {
       type: "text",
@@ -636,7 +665,7 @@ class NewZettelModal extends Modal {
     button.addEventListener("click", (e: Event) => this.goTapped());
     main_container.append(button);
 
-    contentEl.append(main_container);    
+    contentEl.append(main_container);
 
     /***********************************
      ** New Zettel Options            **
@@ -644,31 +673,33 @@ class NewZettelModal extends Modal {
 
     // Setup the container
     const options_container = contentEl.appendChild(
-        contentEl.createEl("div", {
-          cls: ["zettel-modal-container", "zettel-options-container"],
-        })
+      contentEl.createEl("div", {
+        cls: ["zettel-modal-container", "zettel-options-container"],
+      })
     );
     // Create label inside the container
     const label = options_container.appendChild(
       contentEl.createEl("label", {
-        cls: ["label", "zettel-label"]
+        cls: ["label", "zettel-label"],
       })
-    )
+    );
 
     // Create label
-    const openNewZettelCheckboxLabel = label.appendChild(contentEl.createEl("div", {cls:["labelText"]}))
-    openNewZettelCheckboxLabel.innerText = "Open New Zettel on Creation"
+    const openNewZettelCheckboxLabel = label.appendChild(
+      contentEl.createEl("div", { cls: ["labelText"] })
+    );
+    openNewZettelCheckboxLabel.innerText = "Open New Zettel on Creation";
 
     // Create checkbox inside the container
     this.openNewZettelCheckbox = label.appendChild(
       contentEl.createEl("input", {
-        type:"checkbox",
+        type: "checkbox",
         cls: ["zettel-modal-checkbox"],
-        value: options.openNewZettel.toString()
+        value: options.openNewZettel.toString(),
       })
-    )
-    this.openNewZettelCheckbox.id = "zettel-modal-option-openZettel"
-    this.openNewZettelCheckbox.checked = options.openNewZettel
+    );
+    this.openNewZettelCheckbox.id = "zettel-modal-option-openZettel";
+    this.openNewZettelCheckbox.checked = options.openNewZettel;
   }
 
   onOpen() {
@@ -679,9 +710,9 @@ class NewZettelModal extends Modal {
 
   goTapped() {
     const title = this.textBox.value;
-    const openNewZettel = this.openNewZettelCheckbox.checked
+    const openNewZettel = this.openNewZettelCheckbox.checked;
     this.completion(title, {
-      openNewZettel
+      openNewZettel,
     });
     this.close();
   }

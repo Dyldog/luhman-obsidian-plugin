@@ -24,8 +24,8 @@
   flex-grow: 1;
   justify-content: center;
 }
-  
-.zettel-modal-container.zettel-options-container input[type=checkbox] {
+
+.zettel-modal-container.zettel-options-container input[type="checkbox"] {
   width: 2em;
   height: 2em;
 }
