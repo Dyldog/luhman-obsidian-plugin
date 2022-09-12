@@ -20,6 +20,9 @@ Sections are used under each version as follows:
 - Added beta versions (via [BRAT]).
 - Added notifications for some failures.
 - Added CHANGELOG.
+- Added `Open New Zettel on Creation` checkbox on Model screen
+- Added new command `New Child Zettel Note (Don't Open)` same as `New Child Zettel Note` but defaults `Open New Zettel on Creation` to false
+- Added new command `New Sibling Zettel Note (Don't Open)` same as `New Sibling Zettel Note` but defaults `Open New Zettel on Creation` to false
 
 ### Fixed
 
