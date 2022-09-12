@@ -22,7 +22,7 @@ Sections are used under each version as follows:
 - Added CHANGELOG.
 
 ### Fixed
-
+- Fixed [BUG] Weird Static Space Behavior with Create Child/Sibling Selection #32
 - Fixed [BUG] On Create Sibling or Child Note, link to child or sibling incorrect #24
 - Fixed [BUG] Weird space added when making link to zettle
 #30

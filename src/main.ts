@@ -310,20 +310,29 @@ export default class NewZettel extends Plugin {
       // const newLink = "[[" + nextID + "]]";
 
       if (selection) {
-        const title = selection
+        // This current solution eats line returns spaces but thats 
+        // fine as it is turning the selection into a title so it makes sense
+        const selectionTrimStart = selection.trimStart()
+        const selectionTrimEnd = selectionTrimStart.trimEnd()
+        const spaceBefore = selection.length - selectionTrimStart.length
+        const spaceAfter = selectionTrimStart.length - selectionTrimEnd.length
+        const title = selectionTrimEnd
           .split(/\s+/)
           .map((w) => w[0].toUpperCase() + w.slice(1))
           .join(" ");
         const selectionPos = editor!.listSelections()[0];
-        const positionCH = Math.max(
-          selectionPos.head.ch,
-          selectionPos.anchor.ch
-        );
-        const position: EditorPosition = {
-          line: selectionPos.anchor.line,
-          ch: positionCH + 1,
-        };
-        editor!.replaceRange(" " + newLink(title), position, position);
+        /* By default the anchor is what ever position the selection started
+           how ever replaceRange does not accept it both ways and 
+           gets weird if we just pass in the anchor then the head
+           so here we create a vertual anchor and head position to pass in */
+        const anchorCorrect = selectionPos.anchor.line == selectionPos.head.line ? // If the anchor and head are on the same line
+          selectionPos.anchor.ch <= selectionPos.head.ch : // Then if anchor is before the head
+          selectionPos.anchor.line < selectionPos.head.line; // else they are not on the same line and just check if anchor is before head
+        
+        // if anchorCorrect use as is, else switch
+        const virtualAnchor = anchorCorrect ? selectionPos.anchor : selectionPos.head
+        const virtualHead = anchorCorrect ? selectionPos.head : selectionPos.anchor
+        editor!.replaceRange(' '.repeat(spaceBefore) + newLink(title) + ' '.repeat(spaceAfter), virtualAnchor, virtualHead);
         this.makeNote(nextPath(title), title, fileLink, true, openNewFile);
       } else {
         new NewZettelModal(this.app, (title: string, options) => {
