@@ -275,8 +275,9 @@ export default class NewZettel extends Plugin {
   }
 
   isZettelFile(name: string): boolean {
-    const mdRegex = /.*\.md$/;
-    return mdRegex.exec(name) != null && this.fileToId(name) !== "";
+    const mdRegex = /(.*)\.md$/;
+    const matchedName = mdRegex.exec(name)?.[1] || null;
+    return matchedName != null && this.fileToId(matchedName) !== "";
   }
 
   makeNoteFunction(idGenerator: (file: TFile) => string, openNewFile = true) {
