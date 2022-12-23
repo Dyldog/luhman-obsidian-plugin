@@ -49,12 +49,14 @@ interface LuhmanSettings {
   matchRule: string;
   separator: string;
   addTitle: boolean;
+  templateFile: string;
 }
 
 const DEFAULT_SETTINGS: LuhmanSettings = {
   matchRule: "strict",
   addTitle: false,
   separator: "⁝ ",
+  templateFile: "",
 };
 
 class LuhmanSettingTab extends PluginSettingTab {
@@ -67,7 +69,7 @@ class LuhmanSettingTab extends PluginSettingTab {
 
   display(): void {
     const { containerEl } = this;
-    const { matchRule, separator, addTitle } = this.plugin.settings;
+    const { matchRule, separator, addTitle, templateFile } = this.plugin.settings;
     containerEl.empty();
     containerEl.createEl("p", {
       text: "The ID is a block of letters and numbers at the beginning of the filename",
@@ -92,6 +94,19 @@ class LuhmanSettingTab extends PluginSettingTab {
             this.display();
           })
       );
+
+    new Setting(containerEl)
+      .setName("Template File")
+      .setDesc("Set a template file that is used upon note creation.")
+      .addText((setting) => {
+        setting
+          .setPlaceholder("eg. /template/luhman")
+          .setValue(templateFile)
+          .onChange(async (value) => {
+            this.plugin.settings.templateFile = value;
+            await this.plugin.saveSettings();
+          });
+      });
 
     if (matchRule !== "strict") {
       new Setting(containerEl)
@@ -240,9 +255,12 @@ export default class NewZettel extends Plugin {
   async makeNote(
     path: string,
     title: string,
-    content: string,
+    fileLink: string,
     placeCursorAtStartOfContent: boolean,
-    openZettel = false
+    openZettel = false,
+    successCallback: Function = () => {
+      return;
+    }
   ) {
     const app = this.app;
     let titleContent = null;
@@ -251,8 +269,33 @@ export default class NewZettel extends Plugin {
     } else {
       titleContent = "";
     }
-    const fullContent = titleContent + content;
-    const file = await this.app.vault.create(path, fullContent);
+
+    let file = null;
+    const backlinkRegex = /{{link}}/g;
+    const titleRegex = /{{title}}/g;
+    if (this.settings.templateFile && this.settings.templateFile != "") {
+      let template_content = "";
+      try {
+        template_content = await this.app.vault.adapter.read(this.settings.templateFile);
+      } catch (err) {
+        new Notice(`Couldn't read template file ${this.settings.templateFile} make sure that it is a valid file...`);
+        return;
+      }
+
+      if (!titleRegex.test(template_content) || !backlinkRegex.test(template_content)) {
+        new Notice("Title {{title}} or Backlink {{link}} placeholder in template missing. Please add and try again...");
+        return;
+      }
+
+      const file_content = template_content.replace(titleRegex, titleContent).replace(backlinkRegex, fileLink);
+      file = await this.app.vault.create(path, file_content);
+      successCallback();
+    } else {
+      const fullContent = titleContent + fileLink;
+      file = await this.app.vault.create(path, fullContent);
+      successCallback();
+    }
+
     const active = app.workspace.getLeaf();
     if (active == null) {
       return;
@@ -334,30 +377,17 @@ export default class NewZettel extends Plugin {
             : selectionPos.anchor.line < selectionPos.head.line; // else they are not on the same line and just check if anchor is before head
 
         // if anchorCorrect use as is, else switch
-        const virtualAnchor = anchorCorrect
-          ? selectionPos.anchor
-          : selectionPos.head;
-        const virtualHead = anchorCorrect
-          ? selectionPos.head
-          : selectionPos.anchor;
-        editor!.replaceRange(
-          " ".repeat(spaceBefore) + newLink(title) + " ".repeat(spaceAfter),
-          virtualAnchor,
-          virtualHead
-        );
-        this.makeNote(nextPath(title), title, fileLink, true, openNewFile);
+        const virtualAnchor = anchorCorrect ? selectionPos.anchor : selectionPos.head;
+        const virtualHead = anchorCorrect ? selectionPos.head : selectionPos.anchor;
+        // editor!.replaceRange(" ".repeat(spaceBefore) + newLink(title) + " ".repeat(spaceAfter), virtualAnchor, virtualHead);
+        this.makeNote(nextPath(title), title, fileLink, true, openNewFile, () => {
+          editor!.replaceRange(" ".repeat(spaceBefore) + newLink(title) + " ".repeat(spaceAfter), virtualAnchor, virtualHead);
+        });
       } else {
         new NewZettelModal(
           this.app,
           (title: string, options) => {
-            this.insertTextIntoCurrentNote(newLink(title));
-            this.makeNote(
-              nextPath(title),
-              title,
-              fileLink,
-              true,
-              options.openNewZettel
-            );
+            this.makeNote(nextPath(title), title, fileLink, true, options.openNewZettel, this.insertTextIntoCurrentNote(newLink(title)));
           },
           {
             openNewZettel: openNewFile,
@@ -568,7 +598,9 @@ export default class NewZettel extends Plugin {
         position = editor.getCursor();
       }
 
-      editor.replaceRange(prefix + text, position, position);
+      return () => {
+        editor.replaceRange(prefix + text, position, position);
+      };
     }
   }
 
