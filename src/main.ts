@@ -102,7 +102,7 @@ class LuhmanSettingTab extends PluginSettingTab {
       )
       .addText((setting) => {
         setting
-          .setPlaceholder("eg. /template/luhman")
+          .setPlaceholder("eg. /template/luhman.md")
           .setValue(templateFile)
           .onChange(async (value) => {
             this.plugin.settings.templateFile = value;
