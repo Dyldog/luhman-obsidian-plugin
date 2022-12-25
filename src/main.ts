@@ -97,7 +97,9 @@ class LuhmanSettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName("Template File")
-      .setDesc("Set a template file that is used upon note creation.")
+      .setDesc(
+        "Set the path to a template file that is used during the creation of a new note (with file extension). The template needs to have atleast one of the {{title}} and {{link}} placeholder or it will not work."
+      )
       .addText((setting) => {
         setting
           .setPlaceholder("eg. /template/luhman")
