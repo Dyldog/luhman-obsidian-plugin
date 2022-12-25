@@ -275,10 +275,10 @@ export default class NewZettel extends Plugin {
     let file = null;
     const backlinkRegex = /{{link}}/g;
     const titleRegex = /{{title}}/g;
-    if (this.settings.templateFile && this.settings.templateFile != "") {
+    if (this.settings.templateFile && this.settings.templateFile.trim() != "") {
       let template_content = "";
       try {
-        template_content = await this.app.vault.adapter.read(this.settings.templateFile);
+        template_content = await this.app.vault.adapter.read(this.settings.templateFile.trim());
       } catch (err) {
         new Notice(`Couldn't read template file ${this.settings.templateFile} make sure that it is a valid file...`);
         return;
