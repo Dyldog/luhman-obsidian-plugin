@@ -267,7 +267,7 @@ export default class NewZettel extends Plugin {
     const app = this.app;
     let titleContent = null;
     if (title && title.length > 0) {
-      titleContent = "# " + title + "\n\n";
+      titleContent = "# " + title;
     } else {
       titleContent = "";
     }
@@ -293,7 +293,7 @@ export default class NewZettel extends Plugin {
       file = await this.app.vault.create(path, file_content);
       successCallback();
     } else {
-      const fullContent = titleContent + fileLink;
+      const fullContent = titleContent + "\n\n" + fileLink;
       file = await this.app.vault.create(path, fullContent);
       successCallback();
     }
