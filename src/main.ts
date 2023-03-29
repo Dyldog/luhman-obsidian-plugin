@@ -10,7 +10,6 @@ import {
   Setting,
   TFile,
   Notice,
-  parseFrontMatterStringArray,
 } from "obsidian";
 import "./styles/styles.css";
 
