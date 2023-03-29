@@ -10,6 +10,7 @@ import {
   Setting,
   TFile,
   Notice,
+  parseFrontMatterStringArray,
 } from "obsidian";
 import "./styles/styles.css";
 
@@ -49,11 +50,15 @@ interface LuhmanSettings {
   matchRule: string;
   separator: string;
   addTitle: boolean;
+  addAlias: boolean;
+  useLinkAlias: boolean;
 }
 
 const DEFAULT_SETTINGS: LuhmanSettings = {
   matchRule: "strict",
   addTitle: false,
+  addAlias: false,
+  useLinkAlias: false,
   separator: "⁝ ",
 };
 
@@ -67,7 +72,7 @@ class LuhmanSettingTab extends PluginSettingTab {
 
   display(): void {
     const { containerEl } = this;
-    const { matchRule, separator, addTitle } = this.plugin.settings;
+    const { matchRule, separator, addTitle, addAlias, useLinkAlias } = this.plugin.settings;
     containerEl.empty();
     containerEl.createEl("p", {
       text: "The ID is a block of letters and numbers at the beginning of the filename",
@@ -107,6 +112,34 @@ class LuhmanSettingTab extends PluginSettingTab {
             this.display();
           })
         );
+        new Setting(containerEl)
+          .setName("Add title alias automatically")
+          .setDesc(
+            "Add the title of the note to aliases on creation"
+          )
+          .setDisabled(matchRule !== "strict")
+          .addToggle((setting) =>
+            setting.setValue(addAlias).onChange(async (value) => {
+              this.plugin.settings.addAlias = value;
+              await this.plugin.saveSettings();
+              this.display();
+            })
+          );
+        if (addAlias == true) {
+          new Setting(containerEl)
+            .setName("Use alias in created link")
+            .setDesc(
+              "Use title in newly created link"
+            )
+            .setDisabled(addAlias !== true)
+            .addToggle((setting) =>
+              setting.setValue(useLinkAlias).onChange(async (value) => {
+                this.plugin.settings.useLinkAlias = value;
+                await this.plugin.saveSettings();
+                this.display();
+              })
+            );
+        }
     }
 
     const useSeparator =
@@ -251,7 +284,21 @@ export default class NewZettel extends Plugin {
     } else {
       titleContent = "";
     }
-    const fullContent = titleContent + content;
+    let frontmatter = []
+    if (this.settings.addAlias) {
+      frontmatter.push(`aliases: ["${title}"]`);
+    }
+    if (frontmatter.length > 0) {
+      frontmatter.push('---')
+      frontmatter.unshift('---')
+    }
+    frontmatter = frontmatter.filter(row => row && row.length)
+    let frontmatterContent = frontmatter.join('\n')
+    if (frontmatterContent.trim().length > 0) {
+      frontmatterContent = frontmatterContent + '\n\n'
+    }
+
+    const fullContent = frontmatterContent + titleContent + content;
     const file = await this.app.vault.create(path, fullContent);
     const active = app.workspace.getLeaf();
     if (active == null) {
@@ -267,7 +314,11 @@ export default class NewZettel extends Plugin {
     }
 
     if (placeCursorAtStartOfContent) {
-      const position: EditorPosition = { line: 2, ch: 0 };
+      let line = 2
+      if (this.settings.addAlias && this.settings.useLinkAlias) {
+        line = 6
+      }
+      const position: EditorPosition = { line, ch: 0 };
       editor.setCursor(position);
     } else {
       editor.exec("goEnd");
@@ -305,11 +356,17 @@ export default class NewZettel extends Plugin {
             (this.settings.addTitle ? this.settings.separator + title : "") +
             ".md"
           : "";
-
-      const newLink = (title: string) =>
-        `[[${nextID}${
+      const addAlias = this.settings.addAlias;
+      const useLinkAlias = this.settings.useLinkAlias;
+      const newLink = (title: string) => {
+        let alias = ''
+        if (addAlias && useLinkAlias) {
+          alias = '|' + title
+        }
+        return `[[${nextID}${
           this.settings.addTitle ? this.settings.separator + title : ""
-        }]]`;
+        }${alias}]]`
+      }
       // const newLink = "[[" + nextID + "]]";
 
       if (selection) {
