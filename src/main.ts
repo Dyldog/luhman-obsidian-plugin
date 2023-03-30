@@ -426,6 +426,7 @@ export default class NewZettel extends Plugin {
     this.addCommand({
       id: "new-sibling-note",
       name: "New Sibling Zettel Note",
+      icon: "file-symlink",
       callback: () => {
         this.makeNoteFunction(this.makeNoteForNextSiblingOf);
       },
@@ -434,6 +435,7 @@ export default class NewZettel extends Plugin {
     this.addCommand({
       id: "new-child-note",
       name: "New Child Zettel Note",
+      icon: "file-down",
       callback: () => {
         this.makeNoteFunction(this.makeNoteForNextChildOf);
       },
@@ -442,6 +444,7 @@ export default class NewZettel extends Plugin {
     this.addCommand({
       id: "new-sibling-note-dont-open",
       name: "New Sibling Zettel Note (Don't Open)",
+      icon: "file-symlink",
       callback: () => {
         this.makeNoteFunction(this.makeNoteForNextSiblingOf, false);
       },
@@ -450,6 +453,7 @@ export default class NewZettel extends Plugin {
     this.addCommand({
       id: "new-child-note-dont-open",
       name: "New Child Zettel Note (Don't Open)",
+      icon: "file-down",
       callback: () => {
         this.makeNoteFunction(this.makeNoteForNextChildOf, false);
       },
@@ -458,6 +462,7 @@ export default class NewZettel extends Plugin {
     this.addCommand({
       id: "insert-zettel-link",
       name: "Insert Zettel Link",
+      icon: "link-2",
       callback: async () => {
         // let completion = (te)
         const titles = await this.getAllNoteTitles();
@@ -475,6 +480,7 @@ export default class NewZettel extends Plugin {
     this.addCommand({
       id: "open-zettel",
       name: "Open Zettel",
+      icon: "folder-open",
       callback: async () => {
         const titles = await this.getAllNoteTitles();
 
@@ -492,6 +498,7 @@ export default class NewZettel extends Plugin {
     this.addCommand({
       id: "open-parent-zettel",
       name: "Open Parent Zettel",
+      icon: "folder-open",
       callback: () => {
         const file = this.currentFile();
         if (file) {
@@ -513,6 +520,7 @@ export default class NewZettel extends Plugin {
     this.addCommand({
       id: "outdent-zettel",
       name: "Outdent Zettel",
+      icon: "outdent",
       callback: () => {
         const file = this.currentFile();
         if (file) {
