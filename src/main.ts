@@ -112,7 +112,7 @@ class LuhmanSettingTab extends PluginSettingTab {
           })
         );
         new Setting(containerEl)
-          .setName("Add title alias automatically")
+          .setName("Add title alias to frontmatter")
           .setDesc(
             "Add the title of the note to aliases on creation"
           )
@@ -124,21 +124,19 @@ class LuhmanSettingTab extends PluginSettingTab {
               this.display();
             })
           );
-        if (addAlias == true) {
-          new Setting(containerEl)
-            .setName("Use alias in created link")
-            .setDesc(
-              "Use title in newly created link"
-            )
-            .setDisabled(addAlias !== true)
-            .addToggle((setting) =>
-              setting.setValue(useLinkAlias).onChange(async (value) => {
-                this.plugin.settings.useLinkAlias = value;
-                await this.plugin.saveSettings();
-                this.display();
-              })
-            );
-        }
+        new Setting(containerEl)
+          .setName("Use title alias in created link")
+          .setDesc(
+            "Set title as alias in created link"
+          )
+          .setDisabled(matchRule !== "strict")
+          .addToggle((setting) =>
+            setting.setValue(useLinkAlias).onChange(async (value) => {
+              this.plugin.settings.useLinkAlias = value;
+              await this.plugin.saveSettings();
+              this.display();
+            })
+          );
     }
 
     const useSeparator =
@@ -283,22 +281,18 @@ export default class NewZettel extends Plugin {
     } else {
       titleContent = "";
     }
-    let frontmatter = []
-    if (this.settings.addAlias) {
-      frontmatter.push(`aliases: ["${title}"]`);
-    }
-    if (frontmatter.length > 0) {
-      frontmatter.push('---')
-      frontmatter.unshift('---')
-    }
-    frontmatter = frontmatter.filter(row => row && row.length)
-    let frontmatterContent = frontmatter.join('\n')
-    if (frontmatterContent.trim().length > 0) {
-      frontmatterContent = frontmatterContent + '\n\n'
-    }
 
-    const fullContent = frontmatterContent + titleContent + content;
+    const fullContent = titleContent + content;
     const file = await this.app.vault.create(path, fullContent);
+    if (this.settings.addAlias) {
+      // @ts-ignore, TODO: upgrade obsidian dependency to "latest" to resolve missing type
+      await this.app.fileManager.processFrontMatter(file, (frontMatter) => {
+        frontMatter = frontMatter || {}
+        frontMatter.aliases = frontMatter.aliases || []
+        frontMatter.aliases.push(title)
+        return frontMatter
+      })
+    }
     const active = app.workspace.getLeaf();
     if (active == null) {
       return;
@@ -314,8 +308,8 @@ export default class NewZettel extends Plugin {
 
     if (placeCursorAtStartOfContent) {
       let line = 2
-      if (this.settings.addAlias && this.settings.useLinkAlias) {
-        line = 6
+      if (this.settings.addAlias) {
+        line += 4
       }
       const position: EditorPosition = { line, ch: 0 };
       editor.setCursor(position);
@@ -355,13 +349,10 @@ export default class NewZettel extends Plugin {
             (this.settings.addTitle ? this.settings.separator + title : "") +
             ".md"
           : "";
-      const addAlias = this.settings.addAlias;
       const useLinkAlias = this.settings.useLinkAlias;
       const newLink = (title: string) => {
-        let alias = ''
-        if (addAlias && useLinkAlias) {
-          alias = '|' + title
-        }
+        let alias = useLinkAlias ? `|${title}` : ''
+
         return `[[${nextID}${
           this.settings.addTitle ? this.settings.separator + title : ""
         }${alias}]]`
