@@ -281,13 +281,14 @@ export default class NewZettel extends Plugin {
         template_content = await this.app.vault.adapter.read(this.settings.templateFile.trim());
       } catch (err) {
         new Notice(
-          `[LUHMAN] Couldn't read template file. Make sure the path and file are valid/correct. Current setting: ${this.settings.templateFile.trim()}`
+          `[LUHMAN] Couldn't read template file. Make sure the path and file are valid/correct. Current setting: ${this.settings.templateFile.trim()}`,
+          15000
         );
         return;
       }
 
       if (!titleRegex.test(template_content) || !backlinkRegex.test(template_content)) {
-        new Notice("[LUHMAN] Template Malformed. Missing {{title}} and/or {{link}} placeholder. Please add them to the template and try again...");
+        new Notice("[LUHMAN] Template Malformed. Missing {{title}} and/or {{link}} placeholder. Please add them to the template and try again...", 15000);
         return;
       }
 
