@@ -260,7 +260,7 @@ export default class NewZettel extends Plugin {
     fileLink: string,
     placeCursorAtStartOfContent: boolean,
     openZettel = false,
-    successCallback: Function = () => {
+    successCallback: () => void = () => {
       return;
     }
   ) {
