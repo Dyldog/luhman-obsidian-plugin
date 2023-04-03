@@ -357,7 +357,7 @@ export default class NewZettel extends Plugin {
       return;
     }
 
-    if (placeCursorAtStartOfContent) {
+    if (placeCursorAtStartOfContent && (!this.settings.templateFile || this.settings.templateFile.trim() == "")) {
       let line = 2
       if (this.settings.addAlias) {
         line += 4
