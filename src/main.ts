@@ -1,3 +1,5 @@
+import "./styles/styles.css";
+
 import {
   App,
   EditorPosition,
@@ -5,13 +7,12 @@ import {
   FuzzySuggestModal,
   MarkdownView,
   Modal,
+  Notice,
   Plugin,
   PluginSettingTab,
   Setting,
   TFile,
-  Notice,
 } from "obsidian";
-import "./styles/styles.css";
 
 const idOnlyRegex = /([0-9]+|[a-z]+)/g;
 const checkSettingsMessage = "Try checking the settings if this seems wrong.";
@@ -49,12 +50,16 @@ interface LuhmanSettings {
   matchRule: string;
   separator: string;
   addTitle: boolean;
+  addAlias: boolean;
+  useLinkAlias: boolean;
   templateFile: string;
 }
 
 const DEFAULT_SETTINGS: LuhmanSettings = {
   matchRule: "strict",
   addTitle: false,
+  addAlias: false,
+  useLinkAlias: false,
   separator: "⁝ ",
   templateFile: "",
 };
@@ -69,7 +74,7 @@ class LuhmanSettingTab extends PluginSettingTab {
 
   display(): void {
     const { containerEl } = this;
-    const { matchRule, separator, addTitle, templateFile } = this.plugin.settings;
+    const { matchRule, separator, addTitle, addAlias, useLinkAlias, templateFile } = this.plugin.settings;
     containerEl.empty();
     containerEl.createEl("p", {
       text: "The ID is a block of letters and numbers at the beginning of the filename",
@@ -124,6 +129,32 @@ class LuhmanSettingTab extends PluginSettingTab {
             this.display();
           })
         );
+        new Setting(containerEl)
+          .setName("Add title alias to frontmatter")
+          .setDesc(
+            "Add the title of the note to aliases on creation"
+          )
+          .setDisabled(matchRule !== "strict")
+          .addToggle((setting) =>
+            setting.setValue(addAlias).onChange(async (value) => {
+              this.plugin.settings.addAlias = value;
+              await this.plugin.saveSettings();
+              this.display();
+            })
+          );
+        new Setting(containerEl)
+          .setName("Use title alias in created link")
+          .setDesc(
+            "Set title as alias in created link"
+          )
+          .setDisabled(matchRule !== "strict")
+          .addToggle((setting) =>
+            setting.setValue(useLinkAlias).onChange(async (value) => {
+              this.plugin.settings.useLinkAlias = value;
+              await this.plugin.saveSettings();
+              this.display();
+            })
+          );
     }
 
     const useSeparator =
@@ -272,6 +303,7 @@ export default class NewZettel extends Plugin {
       titleContent = "";
     }
 
+
     let file = null;
     const backlinkRegex = /{{link}}/g;
     const titleRegex = /{{title}}/g;
@@ -298,8 +330,19 @@ export default class NewZettel extends Plugin {
     } else {
       const fullContent = titleContent + "\n\n" + fileLink;
       file = await this.app.vault.create(path, fullContent);
+
       successCallback();
     }
+
+    if (this.settings.addAlias && file) {
+        // @ts-ignore, TODO: upgrade obsidian dependency to "latest" to resolve missing type
+        await this.app.fileManager.processFrontMatter(file, (frontMatter) => {
+          frontMatter = frontMatter || {}
+          frontMatter.aliases = frontMatter.aliases || []
+          frontMatter.aliases.push(title)
+          return frontMatter
+        })
+      }
 
     const active = app.workspace.getLeaf();
     if (active == null) {
@@ -314,8 +357,12 @@ export default class NewZettel extends Plugin {
       return;
     }
 
-    if (placeCursorAtStartOfContent) {
-      const position: EditorPosition = { line: 2, ch: 0 };
+    if (placeCursorAtStartOfContent && (!this.settings.templateFile || this.settings.templateFile.trim() == "")) {
+      let line = 2
+      if (this.settings.addAlias) {
+        line += 4
+      }
+      const position: EditorPosition = { line, ch: 0 };
       editor.setCursor(position);
     } else {
       editor.exec("goEnd");
@@ -323,8 +370,9 @@ export default class NewZettel extends Plugin {
   }
 
   isZettelFile(name: string): boolean {
-    const mdRegex = /.*\.md$/;
-    return mdRegex.exec(name) != null && this.fileToId(name) !== "";
+    const mdRegex = /(.*)\.md$/;
+    const matchedName = mdRegex.exec(name)?.[1] || null;
+    return matchedName != null && this.fileToId(matchedName) !== "";
   }
 
   makeNoteFunction(idGenerator: (file: TFile) => string, openNewFile = true) {
@@ -353,11 +401,14 @@ export default class NewZettel extends Plugin {
             (this.settings.addTitle ? this.settings.separator + title : "") +
             ".md"
           : "";
+      const useLinkAlias = this.settings.useLinkAlias;
+      const newLink = (title: string) => {
+        let alias = useLinkAlias ? `|${title}` : ''
 
-      const newLink = (title: string) =>
-        `[[${nextID}${
+        return `[[${nextID}${
           this.settings.addTitle ? this.settings.separator + title : ""
-        }]]`;
+        }${alias}]]`
+      }
       // const newLink = "[[" + nextID + "]]";
 
       if (selection) {
@@ -382,11 +433,19 @@ export default class NewZettel extends Plugin {
             : selectionPos.anchor.line < selectionPos.head.line; // else they are not on the same line and just check if anchor is before head
 
         // if anchorCorrect use as is, else switch
-        const virtualAnchor = anchorCorrect ? selectionPos.anchor : selectionPos.head;
-        const virtualHead = anchorCorrect ? selectionPos.head : selectionPos.anchor;
+        const virtualAnchor = anchorCorrect
+          ? selectionPos.anchor
+          : selectionPos.head;
+        const virtualHead = anchorCorrect
+          ? selectionPos.head
+          : selectionPos.anchor;
         // editor!.replaceRange(" ".repeat(spaceBefore) + newLink(title) + " ".repeat(spaceAfter), virtualAnchor, virtualHead);
         this.makeNote(nextPath(title), title, fileLink, true, openNewFile, () => {
-          editor!.replaceRange(" ".repeat(spaceBefore) + newLink(title) + " ".repeat(spaceAfter), virtualAnchor, virtualHead);
+          editor!.replaceRange(
+            " ".repeat(spaceBefore) + newLink(title) + " ".repeat(spaceAfter),
+            virtualAnchor,
+            virtualHead
+          );
         });
       } else {
         new NewZettelModal(
@@ -461,6 +520,7 @@ export default class NewZettel extends Plugin {
     this.addCommand({
       id: "new-sibling-note",
       name: "New Sibling Zettel Note",
+      icon: "file-symlink",
       callback: () => {
         this.makeNoteFunction(this.makeNoteForNextSiblingOf);
       },
@@ -469,6 +529,7 @@ export default class NewZettel extends Plugin {
     this.addCommand({
       id: "new-child-note",
       name: "New Child Zettel Note",
+      icon: "file-down",
       callback: () => {
         this.makeNoteFunction(this.makeNoteForNextChildOf);
       },
@@ -477,6 +538,7 @@ export default class NewZettel extends Plugin {
     this.addCommand({
       id: "new-sibling-note-dont-open",
       name: "New Sibling Zettel Note (Don't Open)",
+      icon: "file-symlink",
       callback: () => {
         this.makeNoteFunction(this.makeNoteForNextSiblingOf, false);
       },
@@ -485,6 +547,7 @@ export default class NewZettel extends Plugin {
     this.addCommand({
       id: "new-child-note-dont-open",
       name: "New Child Zettel Note (Don't Open)",
+      icon: "file-down",
       callback: () => {
         this.makeNoteFunction(this.makeNoteForNextChildOf, false);
       },
@@ -493,6 +556,7 @@ export default class NewZettel extends Plugin {
     this.addCommand({
       id: "insert-zettel-link",
       name: "Insert Zettel Link",
+      icon: "link-2",
       callback: async () => {
         // let completion = (te)
         const titles = await this.getAllNoteTitles();
@@ -510,6 +574,7 @@ export default class NewZettel extends Plugin {
     this.addCommand({
       id: "open-zettel",
       name: "Open Zettel",
+      icon: "folder-open",
       callback: async () => {
         const titles = await this.getAllNoteTitles();
 
@@ -527,6 +592,7 @@ export default class NewZettel extends Plugin {
     this.addCommand({
       id: "open-parent-zettel",
       name: "Open Parent Zettel",
+      icon: "folder-open",
       callback: () => {
         const file = this.currentFile();
         if (file) {
@@ -548,6 +614,7 @@ export default class NewZettel extends Plugin {
     this.addCommand({
       id: "outdent-zettel",
       name: "Outdent Zettel",
+      icon: "outdent",
       callback: () => {
         const file = this.currentFile();
         if (file) {
