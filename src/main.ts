@@ -330,17 +330,19 @@ export default class NewZettel extends Plugin {
     } else {
       const fullContent = titleContent + "\n\n" + fileLink;
       file = await this.app.vault.create(path, fullContent);
-    if (this.settings.addAlias) {
-      // @ts-ignore, TODO: upgrade obsidian dependency to "latest" to resolve missing type
-      await this.app.fileManager.processFrontMatter(file, (frontMatter) => {
-        frontMatter = frontMatter || {}
-        frontMatter.aliases = frontMatter.aliases || []
-        frontMatter.aliases.push(title)
-        return frontMatter
-      })
-    }
+
       successCallback();
     }
+
+    if (this.settings.addAlias && file) {
+        // @ts-ignore, TODO: upgrade obsidian dependency to "latest" to resolve missing type
+        await this.app.fileManager.processFrontMatter(file, (frontMatter) => {
+          frontMatter = frontMatter || {}
+          frontMatter.aliases = frontMatter.aliases || []
+          frontMatter.aliases.push(title)
+          return frontMatter
+        })
+      }
 
     const active = app.workspace.getLeaf();
     if (active == null) {
