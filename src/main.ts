@@ -49,11 +49,15 @@ interface LuhmanSettings {
   matchRule: string;
   separator: string;
   addTitle: boolean;
+  addAlias: boolean;
+  useLinkAlias: boolean;
 }
 
 const DEFAULT_SETTINGS: LuhmanSettings = {
   matchRule: "strict",
   addTitle: false,
+  addAlias: false,
+  useLinkAlias: false,
   separator: "⁝ ",
 };
 
@@ -67,7 +71,7 @@ class LuhmanSettingTab extends PluginSettingTab {
 
   display(): void {
     const { containerEl } = this;
-    const { matchRule, separator, addTitle } = this.plugin.settings;
+    const { matchRule, separator, addTitle, addAlias, useLinkAlias } = this.plugin.settings;
     containerEl.empty();
     containerEl.createEl("p", {
       text: "The ID is a block of letters and numbers at the beginning of the filename",
@@ -107,6 +111,32 @@ class LuhmanSettingTab extends PluginSettingTab {
             this.display();
           })
         );
+        new Setting(containerEl)
+          .setName("Add title alias to frontmatter")
+          .setDesc(
+            "Add the title of the note to aliases on creation"
+          )
+          .setDisabled(matchRule !== "strict")
+          .addToggle((setting) =>
+            setting.setValue(addAlias).onChange(async (value) => {
+              this.plugin.settings.addAlias = value;
+              await this.plugin.saveSettings();
+              this.display();
+            })
+          );
+        new Setting(containerEl)
+          .setName("Use title alias in created link")
+          .setDesc(
+            "Set title as alias in created link"
+          )
+          .setDisabled(matchRule !== "strict")
+          .addToggle((setting) =>
+            setting.setValue(useLinkAlias).onChange(async (value) => {
+              this.plugin.settings.useLinkAlias = value;
+              await this.plugin.saveSettings();
+              this.display();
+            })
+          );
     }
 
     const useSeparator =
@@ -251,8 +281,18 @@ export default class NewZettel extends Plugin {
     } else {
       titleContent = "";
     }
+
     const fullContent = titleContent + content;
     const file = await this.app.vault.create(path, fullContent);
+    if (this.settings.addAlias) {
+      // @ts-ignore, TODO: upgrade obsidian dependency to "latest" to resolve missing type
+      await this.app.fileManager.processFrontMatter(file, (frontMatter) => {
+        frontMatter = frontMatter || {}
+        frontMatter.aliases = frontMatter.aliases || []
+        frontMatter.aliases.push(title)
+        return frontMatter
+      })
+    }
     const active = app.workspace.getLeaf();
     if (active == null) {
       return;
@@ -267,7 +307,11 @@ export default class NewZettel extends Plugin {
     }
 
     if (placeCursorAtStartOfContent) {
-      const position: EditorPosition = { line: 2, ch: 0 };
+      let line = 2
+      if (this.settings.addAlias) {
+        line += 4
+      }
+      const position: EditorPosition = { line, ch: 0 };
       editor.setCursor(position);
     } else {
       editor.exec("goEnd");
@@ -305,11 +349,14 @@ export default class NewZettel extends Plugin {
             (this.settings.addTitle ? this.settings.separator + title : "") +
             ".md"
           : "";
+      const useLinkAlias = this.settings.useLinkAlias;
+      const newLink = (title: string) => {
+        let alias = useLinkAlias ? `|${title}` : ''
 
-      const newLink = (title: string) =>
-        `[[${nextID}${
+        return `[[${nextID}${
           this.settings.addTitle ? this.settings.separator + title : ""
-        }]]`;
+        }${alias}]]`
+      }
       // const newLink = "[[" + nextID + "]]";
 
       if (selection) {
