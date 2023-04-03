@@ -1,3 +1,5 @@
+import "./styles/styles.css";
+
 import {
   App,
   EditorPosition,
@@ -5,13 +7,12 @@ import {
   FuzzySuggestModal,
   MarkdownView,
   Modal,
+  Notice,
   Plugin,
   PluginSettingTab,
   Setting,
   TFile,
-  Notice,
 } from "obsidian";
-import "./styles/styles.css";
 
 const idOnlyRegex = /([0-9]+|[a-z]+)/g;
 const checkSettingsMessage = "Try checking the settings if this seems wrong.";
@@ -51,6 +52,7 @@ interface LuhmanSettings {
   addTitle: boolean;
   addAlias: boolean;
   useLinkAlias: boolean;
+  templateFile: string;
 }
 
 const DEFAULT_SETTINGS: LuhmanSettings = {
@@ -59,6 +61,7 @@ const DEFAULT_SETTINGS: LuhmanSettings = {
   addAlias: false,
   useLinkAlias: false,
   separator: "⁝ ",
+  templateFile: "",
 };
 
 class LuhmanSettingTab extends PluginSettingTab {
@@ -71,7 +74,7 @@ class LuhmanSettingTab extends PluginSettingTab {
 
   display(): void {
     const { containerEl } = this;
-    const { matchRule, separator, addTitle, addAlias, useLinkAlias } = this.plugin.settings;
+    const { matchRule, separator, addTitle, addAlias, useLinkAlias, templateFile } = this.plugin.settings;
     containerEl.empty();
     containerEl.createEl("p", {
       text: "The ID is a block of letters and numbers at the beginning of the filename",
@@ -96,6 +99,21 @@ class LuhmanSettingTab extends PluginSettingTab {
             this.display();
           })
       );
+
+    new Setting(containerEl)
+      .setName("Template File")
+      .setDesc(
+        "Set the path to a template file that is used during the creation of a new note (with file extension). The template needs to have atleast one of the {{title}} and {{link}} placeholder or it will not work."
+      )
+      .addText((setting) => {
+        setting
+          .setPlaceholder("eg. /template/luhman.md")
+          .setValue(templateFile)
+          .onChange(async (value) => {
+            this.plugin.settings.templateFile = value;
+            await this.plugin.saveSettings();
+          });
+      });
 
     if (matchRule !== "strict") {
       new Setting(containerEl)
@@ -270,20 +288,48 @@ export default class NewZettel extends Plugin {
   async makeNote(
     path: string,
     title: string,
-    content: string,
+    fileLink: string,
     placeCursorAtStartOfContent: boolean,
-    openZettel = false
+    openZettel = false,
+    successCallback: () => void = () => {
+      return;
+    }
   ) {
     const app = this.app;
     let titleContent = null;
     if (title && title.length > 0) {
-      titleContent = "# " + title + "\n\n";
+      titleContent = "# " + title;
     } else {
       titleContent = "";
     }
 
-    const fullContent = titleContent + content;
-    const file = await this.app.vault.create(path, fullContent);
+
+    let file = null;
+    const backlinkRegex = /{{link}}/g;
+    const titleRegex = /{{title}}/g;
+    if (this.settings.templateFile && this.settings.templateFile.trim() != "") {
+      let template_content = "";
+      try {
+        template_content = await this.app.vault.adapter.read(this.settings.templateFile.trim());
+      } catch (err) {
+        new Notice(
+          `[LUHMAN] Couldn't read template file. Make sure the path and file are valid/correct. Current setting: ${this.settings.templateFile.trim()}`,
+          15000
+        );
+        return;
+      }
+
+      if (!titleRegex.test(template_content) || !backlinkRegex.test(template_content)) {
+        new Notice("[LUHMAN] Template Malformed. Missing {{title}} and/or {{link}} placeholder. Please add them to the template and try again...", 15000);
+        return;
+      }
+
+      const file_content = template_content.replace(titleRegex, titleContent).replace(backlinkRegex, fileLink);
+      file = await this.app.vault.create(path, file_content);
+      successCallback();
+    } else {
+      const fullContent = titleContent + "\n\n" + fileLink;
+      file = await this.app.vault.create(path, fullContent);
     if (this.settings.addAlias) {
       // @ts-ignore, TODO: upgrade obsidian dependency to "latest" to resolve missing type
       await this.app.fileManager.processFrontMatter(file, (frontMatter) => {
@@ -293,6 +339,9 @@ export default class NewZettel extends Plugin {
         return frontMatter
       })
     }
+      successCallback();
+    }
+
     const active = app.workspace.getLeaf();
     if (active == null) {
       return;
@@ -388,24 +437,19 @@ export default class NewZettel extends Plugin {
         const virtualHead = anchorCorrect
           ? selectionPos.head
           : selectionPos.anchor;
-        editor!.replaceRange(
-          " ".repeat(spaceBefore) + newLink(title) + " ".repeat(spaceAfter),
-          virtualAnchor,
-          virtualHead
-        );
-        this.makeNote(nextPath(title), title, fileLink, true, openNewFile);
+        // editor!.replaceRange(" ".repeat(spaceBefore) + newLink(title) + " ".repeat(spaceAfter), virtualAnchor, virtualHead);
+        this.makeNote(nextPath(title), title, fileLink, true, openNewFile, () => {
+          editor!.replaceRange(
+            " ".repeat(spaceBefore) + newLink(title) + " ".repeat(spaceAfter),
+            virtualAnchor,
+            virtualHead
+          );
+        });
       } else {
         new NewZettelModal(
           this.app,
           (title: string, options) => {
-            this.insertTextIntoCurrentNote(newLink(title));
-            this.makeNote(
-              nextPath(title),
-              title,
-              fileLink,
-              true,
-              options.openNewZettel
-            );
+            this.makeNote(nextPath(title), title, fileLink, true, options.openNewZettel, this.insertTextIntoCurrentNote(newLink(title)));
           },
           {
             openNewZettel: openNewFile,
@@ -624,7 +668,9 @@ export default class NewZettel extends Plugin {
         position = editor.getCursor();
       }
 
-      editor.replaceRange(prefix + text, position, position);
+      return () => {
+        editor.replaceRange(prefix + text, position, position);
+      };
     }
   }
 
