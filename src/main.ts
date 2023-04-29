@@ -601,7 +601,9 @@ export default class NewZettel extends Plugin {
           titles,
           this.currentlySelectedText(),
           (file) => {
-            this.insertTextIntoCurrentNote("[[" + file.basename + "]]");
+            let doInsert = this.insertTextIntoCurrentNote(`[[${file.basename}]]`);
+            if (doInsert == undefined) new Notice("Error inserting link, Code: 6a46de1d-a8da-4dae-af41-9d444eaf3d4d");
+            else doInsert();
           }
         ).open();
       },
