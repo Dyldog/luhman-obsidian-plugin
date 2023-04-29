@@ -13,6 +13,8 @@ Sections are used under each version as follows:
 - `Security` in case of vulnerabilities.
 
 ## [Unreleased]
+### Added
+- Basic Template support (`{{title}}` and `{{link}}` only)
 
 ## [1.1.4] - 2022-09-12
 
