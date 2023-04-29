@@ -371,7 +371,6 @@ export default class NewZettel extends Plugin {
     }
 
     if (this.settings.addAlias && file) {
-        // @ts-ignore, TODO: upgrade obsidian dependency to "latest" to resolve missing type
         await this.app.fileManager.processFrontMatter(file, (frontMatter) => {
           frontMatter = frontMatter || {}
           frontMatter.aliases = frontMatter.aliases || []
@@ -512,7 +511,7 @@ export default class NewZettel extends Plugin {
       const rest = zettel.basename.split(id)[1];
       this.app.fileManager.renameFile(
         zettel,
-        zettel.parent.path + toId + rest + "." + zettel.extension
+        zettel.parent?.path + toId + rest + "." + zettel.extension
       );
     } else {
       new Notice(`Couldn't find file for ID ${id}. ${checkSettingsMessage}`);
