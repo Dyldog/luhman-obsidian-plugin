@@ -19,6 +19,9 @@ Sections are used under each version as follows:
 - setting to enable title alias in parent file link
 - [KNOWN BUG] Insert Zettel Link does not support aliases
 
+### Fixed
+- Fixed Regex to exclude the extension after test for further processing, which would have cause every theoretically valid file to fail test
+
 ## [1.1.4] - 2022-09-12
 
 * Fixed issue with Release-It config
