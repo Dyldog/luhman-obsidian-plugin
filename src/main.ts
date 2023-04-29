@@ -78,7 +78,16 @@ class LuhmanSettingTab extends PluginSettingTab {
 
   display(): void {
     const { containerEl } = this;
-    const { matchRule, separator, addTitle, addAlias, useLinkAlias, templateFile, templateRequireTitle, templateRequireLink } = this.plugin.settings;
+    const {
+      matchRule,
+      separator,
+      addTitle,
+      addAlias,
+      useLinkAlias,
+      templateFile,
+      templateRequireTitle,
+      templateRequireLink,
+    } = this.plugin.settings;
     containerEl.empty();
     containerEl.createEl("p", {
       text: "The ID is a block of letters and numbers at the beginning of the filename",
@@ -117,10 +126,10 @@ class LuhmanSettingTab extends PluginSettingTab {
             this.plugin.settings.templateFile = value;
             await this.plugin.saveSettings();
             this.display();
-        });
-      })
-    
-    if(templateFile.trim().length != 0) {
+          });
+      });
+
+    if (templateFile.trim().length != 0) {
       new Setting(containerEl.createDiv())
         .setName("Require Template Title Tag")
         .setDesc(
@@ -133,7 +142,7 @@ class LuhmanSettingTab extends PluginSettingTab {
             this.display();
           })
         );
-      
+
       new Setting(containerEl.createDiv())
         .setName("Require Template Link Tag")
         .setDesc(
@@ -162,32 +171,28 @@ class LuhmanSettingTab extends PluginSettingTab {
             this.display();
           })
         );
-        new Setting(containerEl)
-          .setName("Add title alias to frontmatter")
-          .setDesc(
-            "Add the title of the note to aliases on creation"
-          )
-          .setDisabled(matchRule !== "strict")
-          .addToggle((setting) =>
-            setting.setValue(addAlias).onChange(async (value) => {
-              this.plugin.settings.addAlias = value;
-              await this.plugin.saveSettings();
-              this.display();
-            })
-          );
-        new Setting(containerEl)
-          .setName("Use title alias in created link")
-          .setDesc(
-            "Set title as alias in created link"
-          )
-          .setDisabled(matchRule !== "strict")
-          .addToggle((setting) =>
-            setting.setValue(useLinkAlias).onChange(async (value) => {
-              this.plugin.settings.useLinkAlias = value;
-              await this.plugin.saveSettings();
-              this.display();
-            })
-          );
+      new Setting(containerEl)
+        .setName("Add title alias to frontmatter")
+        .setDesc("Add the title of the note to aliases on creation")
+        .setDisabled(matchRule !== "strict")
+        .addToggle((setting) =>
+          setting.setValue(addAlias).onChange(async (value) => {
+            this.plugin.settings.addAlias = value;
+            await this.plugin.saveSettings();
+            this.display();
+          })
+        );
+      new Setting(containerEl)
+        .setName("Use title alias in created link")
+        .setDesc("Set title as alias in created link")
+        .setDisabled(matchRule !== "strict")
+        .addToggle((setting) =>
+          setting.setValue(useLinkAlias).onChange(async (value) => {
+            this.plugin.settings.useLinkAlias = value;
+            await this.plugin.saveSettings();
+            this.display();
+          })
+        );
     }
 
     const useSeparator =
@@ -328,7 +333,8 @@ export default class NewZettel extends Plugin {
       return;
     }
   ) {
-    const useTemplate = this.settings.templateFile && this.settings.templateFile.trim() != "";
+    const useTemplate =
+      this.settings.templateFile && this.settings.templateFile.trim() != "";
     const app = this.app;
     let titleContent = null;
     if (title && title.length > 0) {
@@ -337,14 +343,15 @@ export default class NewZettel extends Plugin {
       titleContent = "";
     }
 
-
     let file = null;
     const backlinkRegex = /{{link}}/g;
     const titleRegex = /{{title}}/g;
     if (useTemplate) {
       let template_content = "";
       try {
-        template_content = await this.app.vault.adapter.read(this.settings.templateFile.trim());
+        template_content = await this.app.vault.adapter.read(
+          this.settings.templateFile.trim()
+        );
       } catch (err) {
         new Notice(
           `[LUHMAN] Couldn't read template file. Make sure the path and file are valid/correct. Current setting: ${this.settings.templateFile.trim()}`,
@@ -353,14 +360,27 @@ export default class NewZettel extends Plugin {
         return;
       }
 
-      let testTitle = this.settings.templateRequireTitle == false || titleRegex.test(template_content)
-      let testLink = this.settings.templateRequireLink == false || backlinkRegex.test(template_content)
+      const testTitle =
+        this.settings.templateRequireTitle == false ||
+        titleRegex.test(template_content);
+      const testLink =
+        this.settings.templateRequireLink == false ||
+        backlinkRegex.test(template_content);
       if (testTitle == false || testLink == false) {
-        new Notice(`[LUHMAN] Template Malformed. Missing {{${testTitle?"":"title"}${testTitle == false && testLink == false ? "}} and {{":""}${testLink?"":"link"}}} placeholder. Please add ${testTitle == false && testLink == false ? "them":"it"} to the template and try again...`, 15000);
+        new Notice(
+          `[LUHMAN] Template Malformed. Missing {{${testTitle ? "" : "title"}${
+            testTitle == false && testLink == false ? "}} and {{" : ""
+          }${testLink ? "" : "link"}}} placeholder. Please add ${
+            testTitle == false && testLink == false ? "them" : "it"
+          } to the template and try again...`,
+          15000
+        );
         return;
       }
 
-      const file_content = template_content.replace(titleRegex, titleContent).replace(backlinkRegex, fileLink);
+      const file_content = template_content
+        .replace(titleRegex, titleContent)
+        .replace(backlinkRegex, fileLink);
       file = await this.app.vault.create(path, file_content);
       successCallback();
     } else {
@@ -371,13 +391,13 @@ export default class NewZettel extends Plugin {
     }
 
     if (this.settings.addAlias && file) {
-        await this.app.fileManager.processFrontMatter(file, (frontMatter) => {
-          frontMatter = frontMatter || {}
-          frontMatter.aliases = frontMatter.aliases || []
-          frontMatter.aliases.push(title)
-          return frontMatter
-        })
-      }
+      await this.app.fileManager.processFrontMatter(file, (frontMatter) => {
+        frontMatter = frontMatter || {};
+        frontMatter.aliases = frontMatter.aliases || [];
+        frontMatter.aliases.push(title);
+        return frontMatter;
+      });
+    }
 
     const active = app.workspace.getLeaf();
     if (active == null) {
@@ -392,10 +412,13 @@ export default class NewZettel extends Plugin {
       return;
     }
 
-    if (placeCursorAtStartOfContent && (!this.settings.templateFile || this.settings.templateFile.trim() == "")) {
-      let line = 2
+    if (
+      placeCursorAtStartOfContent &&
+      (!this.settings.templateFile || this.settings.templateFile.trim() == "")
+    ) {
+      let line = 2;
       if (this.settings.addAlias) {
-        line += 4
+        line += 4;
       }
       const position: EditorPosition = { line, ch: 0 };
       editor.setCursor(position);
@@ -438,12 +461,12 @@ export default class NewZettel extends Plugin {
           : "";
       const useLinkAlias = this.settings.useLinkAlias;
       const newLink = (title: string) => {
-        let alias = useLinkAlias ? `|${title}` : ''
+        const alias = useLinkAlias ? `|${title}` : "";
 
         return `[[${nextID}${
           this.settings.addTitle ? this.settings.separator + title : ""
-        }${alias}]]`
-      }
+        }${alias}]]`;
+      };
       // const newLink = "[[" + nextID + "]]";
 
       if (selection) {
@@ -475,18 +498,32 @@ export default class NewZettel extends Plugin {
           ? selectionPos.head
           : selectionPos.anchor;
         // editor!.replaceRange(" ".repeat(spaceBefore) + newLink(title) + " ".repeat(spaceAfter), virtualAnchor, virtualHead);
-        this.makeNote(nextPath(title), title, fileLink, true, openNewFile, () => {
-          editor!.replaceRange(
-            " ".repeat(spaceBefore) + newLink(title) + " ".repeat(spaceAfter),
-            virtualAnchor,
-            virtualHead
-          );
-        });
+        this.makeNote(
+          nextPath(title),
+          title,
+          fileLink,
+          true,
+          openNewFile,
+          () => {
+            editor!.replaceRange(
+              " ".repeat(spaceBefore) + newLink(title) + " ".repeat(spaceAfter),
+              virtualAnchor,
+              virtualHead
+            );
+          }
+        );
       } else {
         new NewZettelModal(
           this.app,
           (title: string, options) => {
-            this.makeNote(nextPath(title), title, fileLink, true, options.openNewZettel, this.insertTextIntoCurrentNote(newLink(title)));
+            this.makeNote(
+              nextPath(title),
+              title,
+              fileLink,
+              true,
+              options.openNewZettel,
+              this.insertTextIntoCurrentNote(newLink(title))
+            );
           },
           {
             openNewZettel: openNewFile,
@@ -600,8 +637,13 @@ export default class NewZettel extends Plugin {
           titles,
           this.currentlySelectedText(),
           (file) => {
-            let doInsert = this.insertTextIntoCurrentNote(`[[${file.basename}]]`);
-            if (doInsert == undefined) new Notice("Error inserting link, Code: 6a46de1d-a8da-4dae-af41-9d444eaf3d4d");
+            const doInsert = this.insertTextIntoCurrentNote(
+              `[[${file.basename}]]`
+            );
+            if (doInsert == undefined)
+              new Notice(
+                "Error inserting link, Code: 6a46de1d-a8da-4dae-af41-9d444eaf3d4d"
+              );
             else doInsert();
           }
         ).open();
