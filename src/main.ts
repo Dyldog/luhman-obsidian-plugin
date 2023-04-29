@@ -13,37 +13,9 @@ import {
 } from "obsidian";
 import "./styles/styles.css";
 
-const idOnlyRegex = /([0-9]+|[a-z]+)/g;
 const checkSettingsMessage = "Try checking the settings if this seems wrong.";
 
-const lettersIDComponentSuccessors: Record<string, string> = {
-  a: "b",
-  b: "c",
-  c: "d",
-  d: "e",
-  e: "f",
-  f: "g",
-  g: "h",
-  h: "i",
-  i: "j",
-  j: "k",
-  k: "l",
-  l: "m",
-  m: "n",
-  n: "o",
-  o: "p",
-  p: "q",
-  q: "r",
-  r: "s",
-  s: "t",
-  t: "u",
-  u: "v",
-  v: "w",
-  w: "x",
-  x: "y",
-  y: "z",
-  z: "aa",
-};
+import { idOnlyRegex, lettersIDComponentSuccessors } from "./labels"
 
 interface LuhmanSettings {
   matchRule: string;
