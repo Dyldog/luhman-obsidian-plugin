@@ -328,10 +328,11 @@ export default class NewZettel extends Plugin {
       return;
     }
   ) {
+    const useTemplate = this.settings.templateFile && this.settings.templateFile.trim() != "";
     const app = this.app;
     let titleContent = null;
     if (title && title.length > 0) {
-      titleContent = "# " + title;
+      titleContent = (useTemplate == false ? "# " : "") + title.trimStart();
     } else {
       titleContent = "";
     }
@@ -340,7 +341,7 @@ export default class NewZettel extends Plugin {
     let file = null;
     const backlinkRegex = /{{link}}/g;
     const titleRegex = /{{title}}/g;
-    if (this.settings.templateFile && this.settings.templateFile.trim() != "") {
+    if (useTemplate) {
       let template_content = "";
       try {
         template_content = await this.app.vault.adapter.read(this.settings.templateFile.trim());
