@@ -53,6 +53,8 @@ interface LuhmanSettings {
   addAlias: boolean;
   useLinkAlias: boolean;
   templateFile: string;
+  templateRequireTitle: boolean;
+  templateRequireLink: boolean;
 }
 
 const DEFAULT_SETTINGS: LuhmanSettings = {
@@ -62,6 +64,8 @@ const DEFAULT_SETTINGS: LuhmanSettings = {
   useLinkAlias: false,
   separator: "⁝ ",
   templateFile: "",
+  templateRequireTitle: true,
+  templateRequireLink: true,
 };
 
 class LuhmanSettingTab extends PluginSettingTab {
@@ -74,7 +78,7 @@ class LuhmanSettingTab extends PluginSettingTab {
 
   display(): void {
     const { containerEl } = this;
-    const { matchRule, separator, addTitle, addAlias, useLinkAlias, templateFile } = this.plugin.settings;
+    const { matchRule, separator, addTitle, addAlias, useLinkAlias, templateFile, templateRequireTitle, templateRequireLink } = this.plugin.settings;
     containerEl.empty();
     containerEl.createEl("p", {
       text: "The ID is a block of letters and numbers at the beginning of the filename",
@@ -103,7 +107,7 @@ class LuhmanSettingTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName("Template File")
       .setDesc(
-        "Set the path to a template file that is used during the creation of a new note (with file extension). The template needs to have atleast one of the {{title}} and {{link}} placeholder or it will not work."
+        "Set the path to a template file that is used during the creation of a new note (with file extension). The template supported placeholders are {{title}} and {{link}} these are both space-sensitive and case-sensitive."
       )
       .addText((setting) => {
         setting
@@ -112,8 +116,37 @@ class LuhmanSettingTab extends PluginSettingTab {
           .onChange(async (value) => {
             this.plugin.settings.templateFile = value;
             await this.plugin.saveSettings();
-          });
-      });
+            this.display();
+        });
+      })
+    
+    if(templateFile.trim().length != 0) {
+      new Setting(containerEl.createDiv())
+        .setName("Require Template Title Tag")
+        .setDesc(
+          "Should the template file require a title tag? If not adding {{title}} to the template will be optional."
+        )
+        .addToggle((setting) =>
+          setting.setValue(templateRequireTitle).onChange(async (value) => {
+            this.plugin.settings.templateRequireTitle = value;
+            await this.plugin.saveSettings();
+            this.display();
+          })
+        );
+      
+      new Setting(containerEl.createDiv())
+        .setName("Require Template Link Tag")
+        .setDesc(
+          "Should the template file require a link tag? If not adding {{link}} to the template will be optional."
+        )
+        .addToggle((setting) =>
+          setting.setValue(templateRequireLink).onChange(async (value) => {
+            this.plugin.settings.templateRequireLink = value;
+            await this.plugin.saveSettings();
+            this.display();
+          })
+        );
+    }
 
     if (matchRule !== "strict") {
       new Setting(containerEl)
@@ -295,10 +328,11 @@ export default class NewZettel extends Plugin {
       return;
     }
   ) {
+    const useTemplate = this.settings.templateFile && this.settings.templateFile.trim() != "";
     const app = this.app;
     let titleContent = null;
     if (title && title.length > 0) {
-      titleContent = "# " + title;
+      titleContent = (useTemplate == false ? "# " : "") + title.trimStart();
     } else {
       titleContent = "";
     }
@@ -307,7 +341,7 @@ export default class NewZettel extends Plugin {
     let file = null;
     const backlinkRegex = /{{link}}/g;
     const titleRegex = /{{title}}/g;
-    if (this.settings.templateFile && this.settings.templateFile.trim() != "") {
+    if (useTemplate) {
       let template_content = "";
       try {
         template_content = await this.app.vault.adapter.read(this.settings.templateFile.trim());
@@ -319,8 +353,10 @@ export default class NewZettel extends Plugin {
         return;
       }
 
-      if (!titleRegex.test(template_content) || !backlinkRegex.test(template_content)) {
-        new Notice("[LUHMAN] Template Malformed. Missing {{title}} and/or {{link}} placeholder. Please add them to the template and try again...", 15000);
+      let testTitle = this.settings.templateRequireTitle == false || titleRegex.test(template_content)
+      let testLink = this.settings.templateRequireLink == false || backlinkRegex.test(template_content)
+      if (testTitle == false || testLink == false) {
+        new Notice(`[LUHMAN] Template Malformed. Missing {{${testTitle?"":"title"}${testTitle == false && testLink == false ? "}} and {{":""}${testLink?"":"link"}}} placeholder. Please add ${testTitle == false && testLink == false ? "them":"it"} to the template and try again...`, 15000);
         return;
       }
 
@@ -565,7 +601,9 @@ export default class NewZettel extends Plugin {
           titles,
           this.currentlySelectedText(),
           (file) => {
-            this.insertTextIntoCurrentNote("[[" + file.basename + "]]");
+            let doInsert = this.insertTextIntoCurrentNote(`[[${file.basename}]]`);
+            if (doInsert == undefined) new Notice("Error inserting link, Code: 6a46de1d-a8da-4dae-af41-9d444eaf3d4d");
+            else doInsert();
           }
         ).open();
       },

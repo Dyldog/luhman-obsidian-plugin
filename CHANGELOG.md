@@ -13,6 +13,19 @@ Sections are used under each version as follows:
 - `Security` in case of vulnerabilities.
 
 ## [Unreleased]
+### Added
+- Basic Template support (`{{title}}` and `{{link}}` only)
+- Setting to enable adding title as alias in frontmatter of new zettels
+- setting to enable title alias in parent file link
+- [KNOWN BUG] Insert Zettel Link does not support aliases
+
+### Fixed
+- Fixed Regex to exclude the extension after test for further processing, which would have cause every theoretically valid file to fail test
+- Added `file-symlink` icon to the `new sibling` command
+- Added `file-down` icon to the `new child` command
+- Added `link-2` icon to the `insert link` command
+- Added `folder-open` icon to the `open` command
+- Added `outdent` icon to the `outdent` command
 
 ## [1.1.4] - 2022-09-12
 
