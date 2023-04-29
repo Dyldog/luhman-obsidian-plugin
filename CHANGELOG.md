@@ -15,6 +15,9 @@ Sections are used under each version as follows:
 ## [Unreleased]
 ### Added
 - Basic Template support (`{{title}}` and `{{link}}` only)
+- Setting to enable adding title as alias in frontmatter of new zettels
+- setting to enable title alias in parent file link
+- [KNOWN BUG] Insert Zettel Link does not support aliases
 
 ## [1.1.4] - 2022-09-12
 
