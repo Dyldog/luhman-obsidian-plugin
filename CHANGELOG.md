@@ -13,6 +13,8 @@ Sections are used under each version as follows:
 - `Security` in case of vulnerabilities.
 
 ## [Unreleased]
+
+## [1.2.0] - 2023-05-16
 ### Added
 - Basic Template support (`{{title}}` and `{{link}}` only)
 - Setting to enable adding title as alias in frontmatter of new zettels
@@ -107,12 +109,13 @@ Sections are used under each version as follows:
 <!-- Links -->
 [BRAT]: https://github.com/TfTHacker/obsidian42-brat
 
-[unreleased]: https://github.com/Dyldog/luhman-obsidian-plugin/compare/1.1.4...HEAD
+[unreleased]: https://github.com/Dyldog/luhman-obsidian-plugin/compare/1.2.0...HEAD
 [1.1.0]: https://github.com/Dyldog/luhman-obsidian-plugin/compare/1.0.2...1.1.0
 [1.0.2]: https://github.com/Dyldog/luhman-obsidian-plugin/compare/1.0.1...1.0.2
 [1.0.1]: https://github.com/Dyldog/luhman-obsidian-plugin/compare/1.0.0...1.0.1
 [1.0.0]: https://github.com/Dyldog/luhman-obsidian-plugin/releases/tag/1.0.0
 
+[1.2.0]: https://github.com/Dyldog/luhman-obsidian-plugin/compare/1.1.4...1.2.0
 [1.1.4]: https://github.com/Dyldog/luhman-obsidian-plugin/compare/v1.1.3...1.1.4
 [1.1.3]: https://github.com/Dyldog/luhman-obsidian-plugin/compare/v1.1.2...v1.1.3
 [1.1.2]: https://github.com/Dyldog/luhman-obsidian-plugin/compare/v1.1.1...v1.1.2
