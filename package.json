@@ -14,6 +14,9 @@
     "keywords": [],
     "author": "",
     "license": "MIT",
+    "dependencies": {
+        "obsidian": "^1.2.5"
+    },
     "devDependencies": {
         "@release-it/bumper": "^4.0.0",
         "@release-it/keep-a-changelog": "^3.1.0",
@@ -28,7 +31,6 @@
         "dotenv-cli": "^6.0.0",
         "eslint": "^8.23.0",
         "json": "^11.0.0",
-        "obsidian": "^1.2.5",
         "path-browserify": "^1.0.1",
         "prettier": "^2.3.2",
         "rollup": "^2.32.1",
