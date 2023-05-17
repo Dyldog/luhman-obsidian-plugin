@@ -72,8 +72,9 @@ body:
       label: Version
       description: What version of the plugin are you running?
       options:
-        - 1.1.1 (Prerelease Built from Source)
-        - 1.1.0 (Current Version)
+        - 1.2.0 (Current Version)
+        - 1.1.1
+        - 1.1.0
         - < 1.1.0 (Old Versions)
     validations:
       required: true
