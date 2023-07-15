@@ -125,7 +125,7 @@ class LuhmanSettingTab extends PluginSettingTab {
           .onChange(async (value) => {
             this.plugin.settings.templateFile = value;
             await this.plugin.saveSettings();
-            this.display();
+            // this.display();
           });
       });
 
